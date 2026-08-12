@@ -166,6 +166,14 @@
 
 
       <button
+        class="nav-btn"
+        data-page="relatorios"
+      >
+        📊 Relatórios
+      </button>
+
+
+      <button
         class="nav-btn gestor-only"
         data-page="usuarios"
       >
@@ -306,8 +314,6 @@
           </div>
 
 
-          <!-- ALERTAS -->
-
           <div class="panel">
 
             <div class="panel-head">
@@ -390,8 +396,6 @@
 
           </div>
 
-
-          <!-- FORMULÁRIO PRODUTO -->
 
           <div
             id="produtoFormPanel"
@@ -527,8 +531,6 @@
 
           </div>
 
-
-          <!-- TABELA ESTOQUE -->
 
           <div class="panel">
 
@@ -728,9 +730,8 @@
 
           <div class="notice">
 
-            O sistema apresenta os lotes do produto
-            em ordem de validade, ajudando a aplicar
-            FEFO: primeiro que vence, primeiro que sai.
+            O sistema apresenta os lotes do produto em ordem de validade,
+            ajudando a aplicar FEFO: primeiro que vence, primeiro que sai.
 
           </div>
 
@@ -1017,6 +1018,260 @@
 
 
         <!-- ========================================= -->
+        <!-- RELATÓRIOS -->
+        <!-- ========================================= -->
+
+        <section
+          id="page-relatorios"
+          class="page hidden"
+        >
+
+          <h1 class="page-title">
+            Relatórios
+          </h1>
+
+
+          <div class="panel">
+
+            <div class="panel-head">
+
+              <h3>
+                Gerar relatório
+              </h3>
+
+            </div>
+
+
+            <div class="form-grid">
+
+
+              <div class="field">
+
+                <label>
+                  Tipo de relatório
+                </label>
+
+                <select id="relatorioTipo">
+
+                  <option value="estoque">
+                    Estoque atual
+                  </option>
+
+                  <option value="entradas">
+                    Entradas
+                  </option>
+
+                  <option value="saidas">
+                    Saídas
+                  </option>
+
+                  <option value="movimentacoes">
+                    Movimentações
+                  </option>
+
+                  <option value="baixo">
+                    Estoque baixo
+                  </option>
+
+                  <option value="validade">
+                    Próximos do vencimento
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Data inicial
+                </label>
+
+                <input
+                  id="relatorioDataInicial"
+                  type="date"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Data final
+                </label>
+
+                <input
+                  id="relatorioDataFinal"
+                  type="date"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Pesquisar
+                </label>
+
+                <input
+                  id="relatorioBusca"
+                  placeholder="Produto, lote, responsável..."
+                >
+
+              </div>
+
+
+              <div class="form-actions">
+
+                <button
+                  id="btnGerarRelatorio"
+                  type="button"
+                  class="btn btn-primary"
+                >
+                  Gerar relatório
+                </button>
+
+
+                <button
+                  id="btnPdfRelatorio"
+                  type="button"
+                  class="btn btn-secondary"
+                >
+                  Gerar PDF
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="cards">
+
+            <div class="card">
+
+              <div class="stat-label">
+                Registros encontrados
+              </div>
+
+              <div
+                id="relatorioTotalRegistros"
+                class="stat-value"
+              >
+                0
+              </div>
+
+            </div>
+
+
+            <div class="card">
+
+              <div class="stat-label">
+                Quantidade movimentada
+              </div>
+
+              <div
+                id="relatorioQuantidade"
+                class="stat-value"
+              >
+                0
+              </div>
+
+            </div>
+
+
+            <div class="card">
+
+              <div class="stat-label">
+                Entradas
+              </div>
+
+              <div
+                id="relatorioEntradas"
+                class="stat-value"
+              >
+                0
+              </div>
+
+            </div>
+
+
+            <div class="card">
+
+              <div class="stat-label">
+                Saídas
+              </div>
+
+              <div
+                id="relatorioSaidas"
+                class="stat-value"
+              >
+                0
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="panel">
+
+            <div class="panel-head">
+
+              <h3 id="relatorioTitulo">
+                Resultado do relatório
+              </h3>
+
+            </div>
+
+
+            <div class="table-wrap">
+
+              <table>
+
+                <thead id="relatorioHead">
+
+                  <tr>
+
+                    <th>Produto</th>
+
+                    <th>Lote</th>
+
+                    <th>Quantidade</th>
+
+                    <th>Informação</th>
+
+                  </tr>
+
+                </thead>
+
+
+                <tbody id="relatorioBody">
+
+                  <tr>
+
+                    <td colspan="4">
+                      Selecione um relatório e clique em gerar.
+                    </td>
+
+                  </tr>
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ========================================= -->
         <!-- USUÁRIOS -->
         <!-- ========================================= -->
 
@@ -1032,9 +1287,8 @@
 
           <div class="notice">
 
-            Os usuários são autenticados pelo Firebase
-            Authentication e possuem seus perfis
-            registrados na coleção
+            Os usuários são autenticados pelo Firebase Authentication e
+            possuem seus perfis registrados na coleção
             <strong>usuarios</strong>.
 
           </div>
@@ -1084,7 +1338,7 @@
 
 
   <!-- ========================================= -->
-  <!-- JAVASCRIPT PRINCIPAL -->
+  <!-- JAVASCRIPT -->
   <!-- ========================================= -->
 
   <script
