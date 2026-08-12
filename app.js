@@ -1,7 +1,7 @@
 // =========================================================
 // SISFAR V2
 // APP.JS
-// SISTEMA INTEGRADO DE CONTROLE DE ESTOQUE DE FARMÁCIA
+// Sistema Integrado de Controle de Estoque de Farmácia
 // =========================================================
 
 
@@ -38,7 +38,7 @@ import {
 
 
 // =========================================================
-// VARIÁVEIS GERAIS
+// VARIÁVEIS
 // =========================================================
 
 let usuarioAtual = null;
@@ -49,19 +49,28 @@ let lotesCache = [];
 
 let movimentosCache = [];
 
+let usuariosCache = [];
+
+
 let relatorioAtual = {
 
   titulo: "",
 
   tipo: "",
 
-  registros: []
+  registros: [],
+
+  totalQuantidade: 0,
+
+  totalEntradas: 0,
+
+  totalSaidas: 0
 
 };
 
 
 // =========================================================
-// ATALHO ELEMENTOS
+// ATALHO PARA ELEMENTOS
 // =========================================================
 
 const $ = (id) =>
@@ -88,8 +97,10 @@ function showMsg(
 
   if (!el) return;
 
+
   el.textContent =
     texto;
+
 
   el.className =
     `message ${tipo}`;
@@ -101,7 +112,10 @@ function hideMsg(el) {
 
   if (!el) return;
 
-  el.textContent = "";
+
+  el.textContent =
+    "";
+
 
   el.className =
     "message hidden";
@@ -110,12 +124,14 @@ function hideMsg(el) {
 
 
 // =========================================================
-// PROTEÇÃO DE TEXTO
+// SEGURANÇA DE TEXTO
 // =========================================================
 
-function esc(v = "") {
+function esc(
+  valor = ""
+) {
 
-  return String(v)
+  return String(valor)
 
     .replaceAll(
       "&",
@@ -146,13 +162,103 @@ function esc(v = "") {
 
 
 // =========================================================
+// CÓDIGO DE BARRAS
+// =========================================================
+
+function normalizarCodigoBarras(
+  valor
+) {
+
+  return String(
+    valor
+    ||
+    ""
+  )
+    .trim()
+    .replace(/\s+/g, "");
+
+}
+
+
+function encontrarProdutoPorCodigo(
+  codigo
+) {
+
+  const codigoNormalizado =
+    normalizarCodigoBarras(
+      codigo
+    );
+
+
+  if (
+    !codigoNormalizado
+  ) {
+
+    return null;
+
+  }
+
+
+  return produtosCache.find(
+    produto =>
+
+      normalizarCodigoBarras(
+        produto.codigoBarras
+      )
+      ===
+      codigoNormalizado
+
+  )
+  ||
+  null;
+
+}
+
+
+function codigoMovimentacao(
+  movimento
+) {
+
+  if (
+    movimento.codigoBarras
+  ) {
+
+    return movimento.codigoBarras;
+
+  }
+
+
+  const produto =
+    produtosCache.find(
+      p =>
+        p.id
+        ===
+        movimento.produtoId
+    );
+
+
+  return (
+    produto?.codigoBarras
+    ||
+    "-"
+  );
+
+}
+
+
+// =========================================================
 // DATAS
 // =========================================================
 
-function formatDateBR(value) {
+function formatDateBR(
+  value
+) {
 
-  if (!value)
+  if (!value) {
+
     return "-";
+
+  }
 
 
   if (
@@ -230,12 +336,34 @@ function formatarDataHora(
 }
 
 
+function timestampParaData(
+  timestamp
+) {
+
+  if (
+    !timestamp?.toDate
+  ) {
+
+    return null;
+
+  }
+
+
+  return timestamp
+    .toDate();
+
+}
+
+
 function diasAte(
   dataISO
 ) {
 
-  if (!dataISO)
+  if (!dataISO) {
+
     return 999999;
+
+  }
 
 
   const hoje =
@@ -277,25 +405,6 @@ function diasAte(
     )
 
   );
-
-}
-
-
-function timestampParaData(
-  timestamp
-) {
-
-  if (
-    !timestamp?.toDate
-  ) {
-
-    return null;
-
-  }
-
-
-  return timestamp
-    .toDate();
 
 }
 
@@ -370,12 +479,14 @@ function aplicarPermissoes() {
       ".gestor-only"
     )
     .forEach(
-      el => {
+      elemento => {
 
-        el.classList.toggle(
-          "hidden",
-          !isGestor()
-        );
+        elemento
+          .classList
+          .toggle(
+            "hidden",
+            !isGestor()
+          );
 
       }
     );
@@ -386,12 +497,14 @@ function aplicarPermissoes() {
       ".perm-operacao"
     )
     .forEach(
-      el => {
+      elemento => {
 
-        el.classList.toggle(
-          "hidden",
-          !podeOperar()
-        );
+        elemento
+          .classList
+          .toggle(
+            "hidden",
+            !podeOperar()
+          );
 
       }
     );
@@ -406,9 +519,9 @@ function aplicarPermissoes() {
 $("loginForm")
   ?.addEventListener(
     "submit",
-    async (e) => {
+    async (event) => {
 
-      e.preventDefault();
+      event.preventDefault();
 
 
       hideMsg(
@@ -441,14 +554,17 @@ $("loginForm")
 
       }
 
-      catch (err) {
+      catch (erro) {
 
-        console.error(err);
+        console.error(erro);
 
 
         showMsg(
+
           $("loginMsg"),
-          "Não foi possível entrar. Verifique e-mail e senha."
+
+          "Não foi possível entrar. Verifique o e-mail e a senha."
+
         );
 
       }
@@ -475,7 +591,7 @@ $("logoutBtn")
 
 
 // =========================================================
-// ESTADO DE AUTENTICAÇÃO
+// AUTENTICAÇÃO
 // =========================================================
 
 onAuthStateChanged(
@@ -634,9 +750,9 @@ onAuthStateChanged(
 
     }
 
-    catch (err) {
+    catch (erro) {
 
-      console.error(err);
+      console.error(erro);
 
 
       showMsg(
@@ -663,14 +779,14 @@ document
     ".nav-btn[data-page]"
   )
   .forEach(
-    btn => {
+    botao => {
 
-      btn.addEventListener(
+      botao.addEventListener(
         "click",
         () => {
 
           abrirPagina(
-            btn.dataset.page
+            botao.dataset.page
           );
 
         }
@@ -717,13 +833,13 @@ function abrirPagina(
       ".nav-btn[data-page]"
     )
     .forEach(
-      btn => {
+      botao => {
 
-        btn.classList.toggle(
+        botao.classList.toggle(
 
           "active",
 
-          btn.dataset.page
+          botao.dataset.page
           ===
           page
 
@@ -733,7 +849,7 @@ function abrirPagina(
     );
 
 
-  const labels = {
+  const titulos = {
 
     dashboard:
       "Dashboard",
@@ -768,7 +884,7 @@ function abrirPagina(
 
     $("pageHeader")
       .textContent =
-      labels[page]
+      titulos[page]
       ||
       "SISFAR V2";
 
@@ -868,7 +984,7 @@ function abrirPagina(
 
 
 // =========================================================
-// CARREGAMENTO GERAL
+// CARREGAMENTO
 // =========================================================
 
 async function carregarTudo() {
@@ -918,12 +1034,12 @@ async function carregarProdutos() {
     snap.docs
 
       .map(
-        d => ({
+        documento => ({
 
           id:
-            d.id,
+            documento.id,
 
-          ...d.data()
+          ...documento.data()
 
         })
       )
@@ -937,10 +1053,13 @@ async function carregarProdutos() {
             ""
           )
             .localeCompare(
+
               b.nome
               ||
               "",
+
               "pt-BR"
+
             )
 
       );
@@ -967,12 +1086,12 @@ async function carregarLotes() {
 
   lotesCache =
     snap.docs.map(
-      d => ({
+      documento => ({
 
         id:
-          d.id,
+          documento.id,
 
-        ...d.data()
+        ...documento.data()
 
       })
     );
@@ -1012,23 +1131,23 @@ async function carregarMovimentacoes() {
 
     movimentosCache =
       snap.docs.map(
-        d => ({
+        documento => ({
 
           id:
-            d.id,
+            documento.id,
 
-          ...d.data()
+          ...documento.data()
 
         })
       );
 
   }
 
-  catch (err) {
+  catch (erro) {
 
     console.warn(
-      "Carregando movimentações sem orderBy.",
-      err
+      "Carregando movimentações sem ordenação.",
+      erro
     );
 
 
@@ -1045,12 +1164,12 @@ async function carregarMovimentacoes() {
 
     movimentosCache =
       snap.docs.map(
-        d => ({
+        documento => ({
 
           id:
-            d.id,
+            documento.id,
 
-          ...d.data()
+          ...documento.data()
 
         })
       );
@@ -1059,22 +1178,22 @@ async function carregarMovimentacoes() {
     movimentosCache.sort(
       (a, b) => {
 
-        const ad =
+        const dataA =
           a.criadoEm?.seconds
           ||
           0;
 
 
-        const bd =
+        const dataB =
           b.criadoEm?.seconds
           ||
           0;
 
 
         return (
-          bd
+          dataB
           -
-          ad
+          dataA
         );
 
       }
@@ -1086,7 +1205,7 @@ async function carregarMovimentacoes() {
 
 
 // =========================================================
-// TOTAL DE ESTOQUE POR PRODUTO
+// TOTAL POR PRODUTO
 // =========================================================
 
 function totalProduto(
@@ -1130,9 +1249,8 @@ function totalProduto(
 
 function renderDashboard() {
 
-  const totalQtd =
+  const quantidadeTotal =
     lotesCache.reduce(
-
       (
         total,
         lote
@@ -1147,11 +1265,10 @@ function renderDashboard() {
         ),
 
       0
-
     );
 
 
-  const baixos =
+  const estoqueBaixo =
     produtosCache.filter(
       produto =>
 
@@ -1166,6 +1283,7 @@ function renderDashboard() {
           ||
           0
         )
+
     );
 
 
@@ -1214,12 +1332,12 @@ function renderDashboard() {
 
   $("statQuantidade")
     .textContent =
-    totalQtd;
+    quantidadeTotal;
 
 
   $("statBaixo")
     .textContent =
-    baixos.length;
+    estoqueBaixo.length;
 
 
   $("statVencendo")
@@ -1235,8 +1353,8 @@ function renderDashboard() {
 
           const produto =
             produtosCache.find(
-              p =>
-                p.id
+              item =>
+                item.id
                 ===
                 lote.produtoId
             );
@@ -1250,15 +1368,30 @@ function renderDashboard() {
             );
 
 
-          const proximidade =
+          if (
+            quantidade
+            <=
+            0
+          ) {
+
+            return false;
+
+          }
+
+
+          const dias =
             diasAte(
               lote.validade
-            )
+            );
+
+
+          const problemaValidade =
+            dias
             <=
             90;
 
 
-          const baixo =
+          const problemaEstoque =
             produto
               ?
               totalProduto(
@@ -1276,17 +1409,9 @@ function renderDashboard() {
 
           return (
 
-            quantidade
-            >
-            0
-
-            &&
-
-            (
-              proximidade
-              ||
-              baixo
-            )
+            problemaValidade
+            ||
+            problemaEstoque
 
           );
 
@@ -1342,8 +1467,8 @@ function renderDashboard() {
 
         const produto =
           produtosCache.find(
-            p =>
-              p.id
+            item =>
+              item.id
               ===
               lote.produtoId
           );
@@ -1417,47 +1542,37 @@ function renderDashboard() {
           <tr>
 
             <td>
-
               ${esc(
                 produto?.nome
                 ||
                 "-"
               )}
-
             </td>
 
             <td>
-
               ${esc(
                 lote.lote
                 ||
                 "-"
               )}
-
             </td>
 
             <td>
-
               ${formatDateBR(
                 lote.validade
               )}
-
             </td>
 
             <td>
-
               ${Number(
                 lote.quantidade
                 ||
                 0
               )}
-
             </td>
 
             <td>
-
               ${badge}
-
             </td>
 
           </tr>
@@ -1493,8 +1608,11 @@ $("btnNovoProduto")
 
       if (
         !podeOperar()
-      )
+      ) {
+
         return;
+
+      }
 
 
       $("produtoForm")
@@ -1502,7 +1620,8 @@ $("btnNovoProduto")
 
 
       $("produtoId")
-        .value = "";
+        .value =
+        "";
 
 
       $("produtoMinimo")
@@ -1526,7 +1645,7 @@ $("btnNovoProduto")
 
 
 // =========================================================
-// CANCELAR CADASTRO
+// CANCELAR PRODUTO
 // =========================================================
 
 $("cancelProduto")
@@ -1551,20 +1670,71 @@ $("cancelProduto")
 $("produtoForm")
   ?.addEventListener(
     "submit",
-    async (e) => {
+    async (event) => {
 
-      e.preventDefault();
+      event.preventDefault();
 
 
       if (
         !podeOperar()
-      )
+      ) {
+
         return;
+
+      }
 
 
       const id =
         $("produtoId")
           .value;
+
+
+      const codigoBarras =
+        normalizarCodigoBarras(
+          $("produtoCodigoBarras")
+            .value
+        );
+
+
+      if (
+        codigoBarras
+      ) {
+
+        const duplicado =
+          produtosCache.find(
+            produto =>
+
+              normalizarCodigoBarras(
+                produto.codigoBarras
+              )
+              ===
+              codigoBarras
+
+              &&
+
+              produto.id
+              !==
+              id
+
+          );
+
+
+        if (
+          duplicado
+        ) {
+
+          alert(
+
+            `Este código de barras já pertence ao produto: ${duplicado.nome}.`
+
+          );
+
+
+          return;
+
+        }
+
+      }
 
 
       const dados = {
@@ -1573,6 +1743,8 @@ $("produtoForm")
           $("produtoNome")
             .value
             .trim(),
+
+        codigoBarras,
 
         apresentacao:
           $("produtoApresentacao")
@@ -1675,9 +1847,9 @@ $("produtoForm")
 
       }
 
-      catch (err) {
+      catch (erro) {
 
-        console.error(err);
+        console.error(erro);
 
 
         alert(
@@ -1699,14 +1871,17 @@ window.editarProduto =
 
     if (
       !podeOperar()
-    )
+    ) {
+
       return;
+
+    }
 
 
     const produto =
       produtosCache.find(
-        p =>
-          p.id
+        item =>
+          item.id
           ===
           id
       );
@@ -1714,8 +1889,11 @@ window.editarProduto =
 
     if (
       !produto
-    )
+    ) {
+
       return;
+
+    }
 
 
     $("produtoId")
@@ -1726,6 +1904,13 @@ window.editarProduto =
     $("produtoNome")
       .value =
       produto.nome
+      ||
+      "";
+
+
+    $("produtoCodigoBarras")
+      .value =
+      produto.codigoBarras
       ||
       "";
 
@@ -1801,8 +1986,11 @@ window.excluirProduto =
 
     if (
       !isGestor()
-    )
+    ) {
+
       return;
+
+    }
 
 
     const possuiEstoque =
@@ -1839,16 +2027,15 @@ window.excluirProduto =
     }
 
 
-    const confirmar =
-      confirm(
-        "Deseja realmente excluir este produto?"
-      );
-
-
     if (
-      !confirmar
-    )
+      !confirm(
+        "Deseja realmente excluir este produto?"
+      )
+    ) {
+
       return;
+
+    }
 
 
     try {
@@ -1867,15 +2054,17 @@ window.excluirProduto =
       await carregarProdutos();
 
 
+      preencherSelectProdutos();
+
       renderEstoque();
 
       renderDashboard();
 
     }
 
-    catch (err) {
+    catch (erro) {
 
-      console.error(err);
+      console.error(erro);
 
 
       alert(
@@ -1888,10 +2077,19 @@ window.excluirProduto =
 
 
 // =========================================================
-// RENDER ESTOQUE
+// ESTOQUE
 // =========================================================
 
 function renderEstoque() {
+
+  if (
+    !$("estoqueBody")
+  ) {
+
+    return;
+
+  }
+
 
   const busca =
     $("searchProduto")
@@ -1910,11 +2108,15 @@ function renderEstoque() {
 
           produto.nome,
 
+          produto.codigoBarras,
+
           produto.apresentacao,
 
           produto.categoria,
 
-          produto.localizacao
+          produto.localizacao,
+
+          produto.unidade
 
         ]
           .join(" ")
@@ -1938,7 +2140,7 @@ function renderEstoque() {
 
         <tr>
 
-          <td colspan="7">
+          <td colspan="8">
 
             Nenhum produto encontrado.
 
@@ -1989,9 +2191,7 @@ function renderEstoque() {
               class="btn btn-secondary"
               onclick="editarProduto('${produto.id}')"
             >
-
               Editar
-
             </button>
 
           `;
@@ -2007,9 +2207,7 @@ function renderEstoque() {
                 class="btn btn-danger"
                 onclick="excluirProduto('${produto.id}')"
               >
-
                 Excluir
-
               </button>
 
             `;
@@ -2024,49 +2222,47 @@ function renderEstoque() {
           <tr>
 
             <td>
-
               ${esc(
                 produto.nome
                 ||
                 "-"
               )}
-
             </td>
 
             <td>
+              ${esc(
+                produto.codigoBarras
+                ||
+                "-"
+              )}
+            </td>
 
+            <td>
               ${esc(
                 produto.apresentacao
                 ||
                 "-"
               )}
-
             </td>
 
             <td>
-
               ${esc(
                 produto.unidade
                 ||
                 "-"
               )}
-
             </td>
 
             <td>
-
               ${total}
-
             </td>
 
             <td>
-
               ${Number(
                 produto.estoqueMinimo
                 ||
                 0
               )}
-
             </td>
 
             <td>
@@ -2082,9 +2278,7 @@ function renderEstoque() {
             </td>
 
             <td>
-
               ${acoes}
-
             </td>
 
           </tr>
@@ -2119,9 +2313,7 @@ function preencherSelectProdutos() {
 
     `
       <option value="">
-
         Selecione...
-
       </option>
     `
 
@@ -2181,21 +2373,169 @@ function preencherSelectProdutos() {
 
 
 // =========================================================
-// ENTRADA
+// LOCALIZAR CÓDIGO NA ENTRADA
+// =========================================================
+
+function localizarCodigoEntrada() {
+
+  const campo =
+    $("entradaCodigoBarras");
+
+
+  if (
+    !campo
+  ) {
+
+    return;
+
+  }
+
+
+  const codigo =
+    normalizarCodigoBarras(
+      campo.value
+    );
+
+
+  if (
+    !codigo
+  ) {
+
+    return;
+
+  }
+
+
+  const produto =
+    encontrarProdutoPorCodigo(
+      codigo
+    );
+
+
+  if (
+    produto
+  ) {
+
+    $("entradaProduto")
+      .value =
+      produto.id;
+
+
+    hideMsg(
+      $("entradaMsg")
+    );
+
+  }
+
+  else {
+
+    $("entradaProduto")
+      .value =
+      "";
+
+
+    showMsg(
+
+      $("entradaMsg"),
+
+      "Código de barras não encontrado no cadastro de produtos."
+
+    );
+
+  }
+
+}
+
+
+$("entradaCodigoBarras")
+  ?.addEventListener(
+    "change",
+    localizarCodigoEntrada
+  );
+
+
+$("entradaCodigoBarras")
+  ?.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key
+        ===
+        "Enter"
+      ) {
+
+        event.preventDefault();
+
+
+        localizarCodigoEntrada();
+
+      }
+
+    }
+  );
+
+
+// =========================================================
+// SELEÇÃO MANUAL NA ENTRADA
+// =========================================================
+
+$("entradaProduto")
+  ?.addEventListener(
+    "change",
+    () => {
+
+      const produtoId =
+        $("entradaProduto")
+          .value;
+
+
+      const produto =
+        produtosCache.find(
+          item =>
+            item.id
+            ===
+            produtoId
+        );
+
+
+      if (
+        produto
+        &&
+        $("entradaCodigoBarras")
+      ) {
+
+        $("entradaCodigoBarras")
+          .value =
+          produto.codigoBarras
+          ||
+          "";
+
+      }
+
+    }
+  );
+
+
+// =========================================================
+// ENTRADA DE ESTOQUE
 // =========================================================
 
 $("entradaForm")
   ?.addEventListener(
     "submit",
-    async (e) => {
+    async (event) => {
 
-      e.preventDefault();
+      event.preventDefault();
 
 
       if (
         !podeOperar()
-      )
+      ) {
+
         return;
+
+      }
 
 
       const produtoId =
@@ -2234,8 +2574,11 @@ $("entradaForm")
       ) {
 
         showMsg(
+
           $("entradaMsg"),
-          "Preencha corretamente todos os campos obrigatórios."
+
+          "Preencha corretamente os campos obrigatórios."
+
         );
 
 
@@ -2245,6 +2588,26 @@ $("entradaForm")
 
 
       try {
+
+        const produto =
+          produtosCache.find(
+            item =>
+              item.id
+              ===
+              produtoId
+          );
+
+
+        if (
+          !produto
+        ) {
+
+          throw new Error(
+            "Produto não encontrado."
+          );
+
+        }
+
 
         const existente =
           lotesCache.find(
@@ -2300,9 +2663,7 @@ $("entradaForm")
 
             db,
 
-            async (
-              transaction
-            ) => {
+            async transaction => {
 
               const snap =
                 await transaction.get(
@@ -2399,15 +2760,6 @@ $("entradaForm")
         }
 
 
-        const produto =
-          produtosCache.find(
-            p =>
-              p.id
-              ===
-              produtoId
-          );
-
-
         await addDoc(
 
           collection(
@@ -2423,7 +2775,12 @@ $("entradaForm")
             produtoId,
 
             produtoNome:
-              produto?.nome
+              produto.nome
+              ||
+              "",
+
+            codigoBarras:
+              produto.codigoBarras
               ||
               "",
 
@@ -2480,6 +2837,8 @@ $("entradaForm")
         await carregarMovimentacoes();
 
 
+        preencherSelectProdutos();
+
         renderDashboard();
 
         renderEstoque();
@@ -2490,16 +2849,16 @@ $("entradaForm")
 
       }
 
-      catch (err) {
+      catch (erro) {
 
-        console.error(err);
+        console.error(erro);
 
 
         showMsg(
 
           $("entradaMsg"),
 
-          err.message
+          erro.message
           ||
           "Erro ao registrar entrada."
 
@@ -2512,15 +2871,162 @@ $("entradaForm")
 
 
 // =========================================================
-// LOTES PARA BAIXA
+// LOCALIZAR CÓDIGO NA BAIXA
+// =========================================================
+
+function localizarCodigoBaixa() {
+
+  const campo =
+    $("baixaCodigoBarras");
+
+
+  if (
+    !campo
+  ) {
+
+    return;
+
+  }
+
+
+  const codigo =
+    normalizarCodigoBarras(
+      campo.value
+    );
+
+
+  if (
+    !codigo
+  ) {
+
+    return;
+
+  }
+
+
+  const produto =
+    encontrarProdutoPorCodigo(
+      codigo
+    );
+
+
+  if (
+    produto
+  ) {
+
+    $("baixaProduto")
+      .value =
+      produto.id;
+
+
+    preencherLotesBaixa();
+
+
+    hideMsg(
+      $("baixaMsg")
+    );
+
+  }
+
+  else {
+
+    $("baixaProduto")
+      .value =
+      "";
+
+
+    preencherLotesBaixa();
+
+
+    showMsg(
+
+      $("baixaMsg"),
+
+      "Código de barras não encontrado no cadastro de produtos."
+
+    );
+
+  }
+
+}
+
+
+$("baixaCodigoBarras")
+  ?.addEventListener(
+    "change",
+    localizarCodigoBaixa
+  );
+
+
+$("baixaCodigoBarras")
+  ?.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key
+        ===
+        "Enter"
+      ) {
+
+        event.preventDefault();
+
+
+        localizarCodigoBaixa();
+
+      }
+
+    }
+  );
+
+
+// =========================================================
+// PRODUTO MANUAL NA BAIXA
 // =========================================================
 
 $("baixaProduto")
   ?.addEventListener(
     "change",
-    preencherLotesBaixa
+    () => {
+
+      const produtoId =
+        $("baixaProduto")
+          .value;
+
+
+      const produto =
+        produtosCache.find(
+          item =>
+            item.id
+            ===
+            produtoId
+        );
+
+
+      if (
+        produto
+        &&
+        $("baixaCodigoBarras")
+      ) {
+
+        $("baixaCodigoBarras")
+          .value =
+          produto.codigoBarras
+          ||
+          "";
+
+      }
+
+
+      preencherLotesBaixa();
+
+    }
   );
 
+
+// =========================================================
+// LOTES DA BAIXA
+// =========================================================
 
 function preencherLotesBaixa() {
 
@@ -2559,6 +3065,7 @@ function preencherLotesBaixa() {
           )
           >
           0
+
       )
 
       .sort(
@@ -2583,9 +3090,7 @@ function preencherLotesBaixa() {
 
     `
       <option value="">
-
         Selecione...
-
       </option>
     `
 
@@ -2643,15 +3148,18 @@ function preencherLotesBaixa() {
 $("baixaForm")
   ?.addEventListener(
     "submit",
-    async (e) => {
+    async (event) => {
 
-      e.preventDefault();
+      event.preventDefault();
 
 
       if (
         !podeOperar()
-      )
+      ) {
+
         return;
+
+      }
 
 
       const produtoId =
@@ -2682,8 +3190,11 @@ $("baixaForm")
       ) {
 
         showMsg(
+
           $("baixaMsg"),
-          "Preencha corretamente todos os campos."
+
+          "Preencha corretamente os campos obrigatórios."
+
         );
 
 
@@ -2693,6 +3204,26 @@ $("baixaForm")
 
 
       try {
+
+        const produto =
+          produtosCache.find(
+            item =>
+              item.id
+              ===
+              produtoId
+          );
+
+
+        if (
+          !produto
+        ) {
+
+          throw new Error(
+            "Produto não encontrado."
+          );
+
+        }
+
 
         const loteRef =
           doc(
@@ -2714,9 +3245,7 @@ $("baixaForm")
 
           db,
 
-          async (
-            transaction
-          ) => {
+          async transaction => {
 
             const snap =
               await transaction.get(
@@ -2788,15 +3317,6 @@ $("baixaForm")
         );
 
 
-        const produto =
-          produtosCache.find(
-            p =>
-              p.id
-              ===
-              produtoId
-          );
-
-
         await addDoc(
 
           collection(
@@ -2812,7 +3332,12 @@ $("baixaForm")
             produtoId,
 
             produtoNome:
-              produto?.nome
+              produto.nome
+              ||
+              "",
+
+            codigoBarras:
+              produto.codigoBarras
               ||
               "",
 
@@ -2875,7 +3400,7 @@ $("baixaForm")
         await carregarMovimentacoes();
 
 
-        preencherLotesBaixa();
+        preencherSelectProdutos();
 
         renderDashboard();
 
@@ -2887,16 +3412,16 @@ $("baixaForm")
 
       }
 
-      catch (err) {
+      catch (erro) {
 
-        console.error(err);
+        console.error(erro);
 
 
         showMsg(
 
           $("baixaMsg"),
 
-          err.message
+          erro.message
           ||
           "Erro ao registrar baixa."
 
@@ -2916,8 +3441,11 @@ function renderMovimentacoes() {
 
   if (
     !$("movBody")
-  )
+  ) {
+
     return;
+
+  }
 
 
   const tipo =
@@ -2938,29 +3466,33 @@ function renderMovimentacoes() {
 
   const lista =
     movimentosCache.filter(
-      mov => {
+      movimento => {
 
-        const okTipo =
+        const tipoOk =
           !tipo
           ||
-          mov.tipo
+          movimento.tipo
           ===
           tipo;
 
 
         const texto = [
 
-          mov.produtoNome,
+          movimento.produtoNome,
 
-          mov.lote,
+          codigoMovimentacao(
+            movimento
+          ),
 
-          mov.responsavelNome,
+          movimento.lote,
 
-          mov.destino,
+          movimento.responsavelNome,
 
-          mov.origem,
+          movimento.destino,
 
-          mov.motivo
+          movimento.origem,
+
+          movimento.motivo
 
         ]
           .join(" ")
@@ -2969,7 +3501,7 @@ function renderMovimentacoes() {
 
         return (
 
-          okTipo
+          tipoOk
 
           &&
 
@@ -2992,7 +3524,7 @@ function renderMovimentacoes() {
 
         <tr>
 
-          <td colspan="7">
+          <td colspan="8">
 
             Nenhuma movimentação encontrada.
 
@@ -3011,22 +3543,20 @@ function renderMovimentacoes() {
   $("movBody")
     .innerHTML =
     lista.map(
-      mov => `
+      movimento => `
 
         <tr>
 
           <td>
-
             ${formatarDataHora(
-              mov.criadoEm
+              movimento.criadoEm
             )}
-
           </td>
 
           <td>
 
             ${
-              mov.tipo
+              movimento.tipo
               ===
               "entrada"
                 ?
@@ -3038,55 +3568,53 @@ function renderMovimentacoes() {
           </td>
 
           <td>
-
             ${esc(
-              mov.produtoNome
+              movimento.produtoNome
               ||
               "-"
             )}
-
           </td>
 
           <td>
-
             ${esc(
-              mov.lote
+              codigoMovimentacao(
+                movimento
+              )
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              movimento.lote
               ||
               "-"
             )}
-
           </td>
 
           <td>
-
             ${Number(
-              mov.quantidade
+              movimento.quantidade
               ||
               0
             )}
-
           </td>
 
           <td>
-
             ${esc(
-              mov.destino
+              movimento.destino
               ||
-              mov.origem
+              movimento.origem
               ||
               "-"
             )}
-
           </td>
 
           <td>
-
             ${esc(
-              mov.responsavelNome
+              movimento.responsavelNome
               ||
               "-"
             )}
-
           </td>
 
         </tr>
@@ -3117,7 +3645,7 @@ $("movBusca")
 
 
 // =========================================================
-// LOTES E VALIDADES
+// VALIDADES
 // =========================================================
 
 function statusValidade(
@@ -3204,8 +3732,11 @@ function renderValidades() {
 
   if (
     !$("validadeBody")
-  )
+  ) {
+
     return;
+
+  }
 
 
   const lista =
@@ -3240,7 +3771,7 @@ function renderValidades() {
 
         <tr>
 
-          <td colspan="5">
+          <td colspan="6">
 
             Nenhum lote cadastrado.
 
@@ -3263,8 +3794,8 @@ function renderValidades() {
 
         const produto =
           produtosCache.find(
-            p =>
-              p.id
+            item =>
+              item.id
               ===
               lote.produtoId
           );
@@ -3281,41 +3812,41 @@ function renderValidades() {
           <tr>
 
             <td>
-
               ${esc(
                 produto?.nome
                 ||
                 "-"
               )}
-
             </td>
 
             <td>
+              ${esc(
+                produto?.codigoBarras
+                ||
+                "-"
+              )}
+            </td>
 
+            <td>
               ${esc(
                 lote.lote
                 ||
                 "-"
               )}
-
             </td>
 
             <td>
-
               ${formatDateBR(
                 lote.validade
               )}
-
             </td>
 
             <td>
-
               ${Number(
                 lote.quantidade
                 ||
                 0
               )}
-
             </td>
 
             <td>
@@ -3323,9 +3854,7 @@ function renderValidades() {
               <span
                 class="badge ${status.classe}"
               >
-
                 ${status.texto}
-
               </span>
 
             </td>
@@ -3349,8 +3878,11 @@ async function carregarUsuarios() {
 
   if (
     !isGestor()
-  )
+  ) {
+
     return;
+
+  }
 
 
   try {
@@ -3366,106 +3898,51 @@ async function carregarUsuarios() {
       );
 
 
-    const usuarios =
+    usuariosCache =
       snap.docs.map(
-        d => ({
+        documento => ({
 
           id:
-            d.id,
+            documento.id,
 
-          ...d.data()
+          ...documento.data()
 
         })
       );
 
 
-    if (
-      !usuarios.length
-    ) {
+    usuariosCache.sort(
+      (a, b) =>
 
-      $("usuariosBody")
-        .innerHTML = `
+        (
+          a.nome
+          ||
+          a.email
+          ||
+          ""
+        )
+          .localeCompare(
 
-          <tr>
+            b.nome
+            ||
+            b.email
+            ||
+            "",
 
-            <td colspan="4">
+            "pt-BR"
 
-              Nenhum usuário cadastrado.
+          )
 
-            </td>
-
-          </tr>
-
-        `;
-
-
-      return;
-
-    }
+    );
 
 
-    $("usuariosBody")
-      .innerHTML =
-      usuarios.map(
-        usuario => `
-
-          <tr>
-
-            <td>
-
-              ${esc(
-                usuario.nome
-                ||
-                "-"
-              )}
-
-            </td>
-
-            <td>
-
-              ${esc(
-                usuario.email
-                ||
-                "-"
-              )}
-
-            </td>
-
-            <td>
-
-              ${esc(
-                perfilLabel(
-                  usuario.perfil
-                )
-              )}
-
-            </td>
-
-            <td>
-
-              ${
-                usuario.ativo
-                ===
-                false
-                  ?
-                  '<span class="badge danger">Não</span>'
-                  :
-                  '<span class="badge ok">Sim</span>'
-              }
-
-            </td>
-
-          </tr>
-
-        `
-      )
-      .join("");
+    renderUsuarios();
 
   }
 
-  catch (err) {
+  catch (erro) {
 
-    console.error(err);
+    console.error(erro);
 
 
     $("usuariosBody")
@@ -3473,7 +3950,7 @@ async function carregarUsuarios() {
 
         <tr>
 
-          <td colspan="4">
+          <td colspan="5">
 
             Erro ao carregar usuários.
 
@@ -3489,6 +3966,387 @@ async function carregarUsuarios() {
 
 
 // =========================================================
+// RENDER USUÁRIOS
+// =========================================================
+
+function renderUsuarios() {
+
+  if (
+    !$("usuariosBody")
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !usuariosCache.length
+  ) {
+
+    $("usuariosBody")
+      .innerHTML = `
+
+        <tr>
+
+          <td colspan="5">
+
+            Nenhum usuário cadastrado.
+
+          </td>
+
+        </tr>
+
+      `;
+
+
+    return;
+
+  }
+
+
+  $("usuariosBody")
+    .innerHTML =
+    usuariosCache.map(
+      usuario => `
+
+        <tr>
+
+          <td>
+            ${esc(
+              usuario.nome
+              ||
+              "-"
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              usuario.email
+              ||
+              "-"
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              perfilLabel(
+                usuario.perfil
+              )
+            )}
+          </td>
+
+          <td>
+
+            ${
+              usuario.ativo
+              ===
+              false
+                ?
+                '<span class="badge danger">Inativo</span>'
+                :
+                '<span class="badge ok">Ativo</span>'
+            }
+
+          </td>
+
+          <td>
+
+            <button
+              class="btn btn-secondary"
+              onclick="editarUsuario('${usuario.id}')"
+            >
+              Editar
+            </button>
+
+          </td>
+
+        </tr>
+
+      `
+    )
+    .join("");
+
+}
+
+
+// =========================================================
+// EDITAR USUÁRIO
+// =========================================================
+
+window.editarUsuario =
+  (id) => {
+
+    if (
+      !isGestor()
+    ) {
+
+      return;
+
+    }
+
+
+    const usuario =
+      usuariosCache.find(
+        item =>
+          item.id
+          ===
+          id
+      );
+
+
+    if (
+      !usuario
+    ) {
+
+      return;
+
+    }
+
+
+    $("usuarioId")
+      .value =
+      usuario.id;
+
+
+    $("usuarioNome")
+      .value =
+      usuario.nome
+      ||
+      "";
+
+
+    $("usuarioEmail")
+      .value =
+      usuario.email
+      ||
+      "";
+
+
+    $("usuarioPerfil")
+      .value =
+      usuario.perfil
+      ||
+      "consulta";
+
+
+    $("usuarioAtivo")
+      .value =
+      usuario.ativo
+      ===
+      false
+        ?
+        "false"
+        :
+        "true";
+
+
+    $("usuarioFormPanel")
+      .classList
+      .remove(
+        "hidden"
+      );
+
+
+    window.scrollTo({
+
+      top:
+        0,
+
+      behavior:
+        "smooth"
+
+    });
+
+  };
+
+
+// =========================================================
+// CANCELAR USUÁRIO
+// =========================================================
+
+$("cancelUsuario")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      $("usuarioForm")
+        ?.reset();
+
+
+      $("usuarioFormPanel")
+        ?.classList
+        .add(
+          "hidden"
+        );
+
+    }
+  );
+
+
+// =========================================================
+// SALVAR USUÁRIO
+// =========================================================
+
+$("usuarioForm")
+  ?.addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+
+      if (
+        !isGestor()
+      ) {
+
+        return;
+
+      }
+
+
+      const id =
+        $("usuarioId")
+          .value;
+
+
+      const nome =
+        $("usuarioNome")
+          .value
+          .trim();
+
+
+      const perfil =
+        $("usuarioPerfil")
+          .value;
+
+
+      const ativo =
+        $("usuarioAtivo")
+          .value
+        ===
+        "true";
+
+
+      if (
+        !id
+        ||
+        !nome
+      ) {
+
+        alert(
+          "Preencha os dados do usuário."
+        );
+
+
+        return;
+
+      }
+
+
+      if (
+        id
+        ===
+        usuarioAtual.uid
+      ) {
+
+        if (
+          !ativo
+        ) {
+
+          alert(
+            "Você não pode desativar o usuário que está utilizando no momento."
+          );
+
+
+          return;
+
+        }
+
+
+        if (
+          perfil
+          !==
+          "gestor"
+        ) {
+
+          alert(
+            "Para evitar perda de acesso, você não pode retirar o perfil Gestor da sua própria conta."
+          );
+
+
+          return;
+
+        }
+
+      }
+
+
+      try {
+
+        await updateDoc(
+
+          doc(
+            db,
+            "usuarios",
+            id
+          ),
+
+          {
+
+            nome,
+
+            perfil,
+
+            ativo,
+
+            atualizadoEm:
+              serverTimestamp(),
+
+            atualizadoPor:
+              usuarioAtual.uid
+
+          }
+
+        );
+
+
+        $("usuarioFormPanel")
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        $("usuarioForm")
+          .reset();
+
+
+        await carregarUsuarios();
+
+
+        alert(
+          "Usuário atualizado com sucesso."
+        );
+
+      }
+
+      catch (erro) {
+
+        console.error(erro);
+
+
+        alert(
+          "Erro ao atualizar usuário."
+        );
+
+      }
+
+    }
+  );
+
+
+// =========================================================
 // RELATÓRIOS
 // =========================================================
 
@@ -3496,8 +4354,11 @@ function inicializarRelatorios() {
 
   if (
     !$("relatorioTipo")
-  )
+  ) {
+
     return;
+
+  }
 
 
   if (
@@ -3512,7 +4373,7 @@ function inicializarRelatorios() {
 
 
 // =========================================================
-// FILTRAR MOVIMENTAÇÕES POR DATA
+// MOVIMENTO DENTRO DO PERÍODO
 // =========================================================
 
 function movimentoDentroPeriodo(
@@ -3532,9 +4393,11 @@ function movimentoDentroPeriodo(
   ) {
 
     return (
+
       !dataInicial
       &&
       !dataFinal
+
     );
 
   }
@@ -3597,9 +4460,18 @@ function movimentoDentroPeriodo(
 
 function gerarRelatorio() {
 
+  if (
+    !$("relatorioTipo")
+  ) {
+
+    return;
+
+  }
+
+
   const tipo =
     $("relatorioTipo")
-      ?.value
+      .value
     ||
     "estoque";
 
@@ -3627,7 +4499,9 @@ function gerarRelatorio() {
     "";
 
 
-  let registros = [];
+  let registros =
+    [];
+
 
   let titulo =
     "Relatório";
@@ -3690,6 +4564,8 @@ function gerarRelatorio() {
 
               item.produto.nome,
 
+              item.produto.codigoBarras,
+
               item.produto.apresentacao,
 
               item.produto.categoria,
@@ -3715,13 +4591,15 @@ function gerarRelatorio() {
 
         <th>Produto</th>
 
+        <th>Código</th>
+
         <th>Apresentação</th>
 
         <th>Unidade</th>
 
         <th>Quantidade</th>
 
-        <th>Estoque mínimo</th>
+        <th>Mínimo</th>
 
         <th>Situação</th>
 
@@ -3757,45 +4635,43 @@ function gerarRelatorio() {
             <tr>
 
               <td>
-
                 ${esc(
                   item.produto.nome
                   ||
                   "-"
                 )}
-
               </td>
 
               <td>
+                ${esc(
+                  item.produto.codigoBarras
+                  ||
+                  "-"
+                )}
+              </td>
 
+              <td>
                 ${esc(
                   item.produto.apresentacao
                   ||
                   "-"
                 )}
-
               </td>
 
               <td>
-
                 ${esc(
                   item.produto.unidade
                   ||
                   "-"
                 )}
-
               </td>
 
               <td>
-
                 ${item.quantidade}
-
               </td>
 
               <td>
-
                 ${minimo}
-
               </td>
 
               <td>
@@ -3866,6 +4742,8 @@ function gerarRelatorio() {
 
               item.produto.nome,
 
+              item.produto.codigoBarras,
+
               item.produto.apresentacao,
 
               item.produto.categoria
@@ -3899,13 +4777,15 @@ function gerarRelatorio() {
 
         <th>Produto</th>
 
+        <th>Código</th>
+
         <th>Apresentação</th>
 
         <th>Quantidade atual</th>
 
         <th>Estoque mínimo</th>
 
-        <th>Diferença</th>
+        <th>Falta</th>
 
       </tr>
 
@@ -3924,10 +4804,13 @@ function gerarRelatorio() {
             );
 
 
-          const diferenca =
-            minimo
-            -
-            item.quantidade;
+          const falta =
+            Math.max(
+              minimo
+              -
+              item.quantidade,
+              0
+            );
 
 
           totalQuantidade +=
@@ -3939,41 +4822,39 @@ function gerarRelatorio() {
             <tr>
 
               <td>
-
                 ${esc(
                   item.produto.nome
                   ||
                   "-"
                 )}
-
               </td>
 
               <td>
+                ${esc(
+                  item.produto.codigoBarras
+                  ||
+                  "-"
+                )}
+              </td>
 
+              <td>
                 ${esc(
                   item.produto.apresentacao
                   ||
                   "-"
                 )}
-
               </td>
 
               <td>
-
                 ${item.quantidade}
-
               </td>
 
               <td>
-
                 ${minimo}
-
               </td>
 
               <td>
-
-                ${diferenca}
-
+                ${falta}
               </td>
 
             </tr>
@@ -3988,7 +4869,7 @@ function gerarRelatorio() {
 
 
   // =======================================================
-  // VALIDADES
+  // VALIDADE
   // =======================================================
 
   if (
@@ -4009,8 +4890,8 @@ function gerarRelatorio() {
 
             const produto =
               produtosCache.find(
-                p =>
-                  p.id
+                item =>
+                  item.id
                   ===
                   lote.produtoId
               );
@@ -4025,6 +4906,8 @@ function gerarRelatorio() {
             const texto = [
 
               produto?.nome,
+
+              produto?.codigoBarras,
 
               lote.lote
 
@@ -4083,6 +4966,8 @@ function gerarRelatorio() {
 
         <th>Produto</th>
 
+        <th>Código</th>
+
         <th>Lote</th>
 
         <th>Validade</th>
@@ -4102,8 +4987,8 @@ function gerarRelatorio() {
 
           const produto =
             produtosCache.find(
-              p =>
-                p.id
+              item =>
+                item.id
                 ===
                 lote.produtoId
             );
@@ -4128,41 +5013,41 @@ function gerarRelatorio() {
             <tr>
 
               <td>
-
                 ${esc(
                   produto?.nome
                   ||
                   "-"
                 )}
-
               </td>
 
               <td>
+                ${esc(
+                  produto?.codigoBarras
+                  ||
+                  "-"
+                )}
+              </td>
 
+              <td>
                 ${esc(
                   lote.lote
                   ||
                   "-"
                 )}
-
               </td>
 
               <td>
-
                 ${formatDateBR(
                   lote.validade
                 )}
-
               </td>
 
               <td>
-
                 ${Number(
                   lote.quantidade
                   ||
                   0
                 )}
-
               </td>
 
               <td>
@@ -4170,9 +5055,7 @@ function gerarRelatorio() {
                 <span
                   class="badge ${status.classe}"
                 >
-
                   ${status.texto}
-
                 </span>
 
               </td>
@@ -4189,20 +5072,24 @@ function gerarRelatorio() {
 
 
   // =======================================================
-  // ENTRADAS / SAÍDAS / MOVIMENTAÇÕES
+  // MOVIMENTAÇÕES / ENTRADAS / SAÍDAS
   // =======================================================
 
   if (
     [
+
       "entradas",
+
       "saidas",
+
       "movimentacoes"
+
     ].includes(
       tipo
     )
   ) {
 
-    let tipoMov =
+    let filtroTipo =
       "";
 
 
@@ -4215,7 +5102,8 @@ function gerarRelatorio() {
       titulo =
         "Relatório de Entradas";
 
-      tipoMov =
+
+      filtroTipo =
         "entrada";
 
     }
@@ -4230,7 +5118,8 @@ function gerarRelatorio() {
       titulo =
         "Relatório de Saídas";
 
-      tipoMov =
+
+      filtroTipo =
         "saida";
 
     }
@@ -4253,11 +5142,11 @@ function gerarRelatorio() {
         movimento => {
 
           const tipoOk =
-            !tipoMov
+            !filtroTipo
             ||
             movimento.tipo
             ===
-            tipoMov;
+            filtroTipo;
 
 
           const periodoOk =
@@ -4275,6 +5164,10 @@ function gerarRelatorio() {
           const texto = [
 
             movimento.produtoNome,
+
+            codigoMovimentacao(
+              movimento
+            ),
 
             movimento.lote,
 
@@ -4322,6 +5215,8 @@ function gerarRelatorio() {
         <th>Tipo</th>
 
         <th>Produto</th>
+
+        <th>Código</th>
 
         <th>Lote</th>
 
@@ -4381,11 +5276,9 @@ function gerarRelatorio() {
             <tr>
 
               <td>
-
                 ${formatarDataHora(
                   movimento.criadoEm
                 )}
-
               </td>
 
               <td>
@@ -4403,33 +5296,34 @@ function gerarRelatorio() {
               </td>
 
               <td>
-
                 ${esc(
                   movimento.produtoNome
                   ||
                   "-"
                 )}
-
               </td>
 
               <td>
+                ${esc(
+                  codigoMovimentacao(
+                    movimento
+                  )
+                )}
+              </td>
 
+              <td>
                 ${esc(
                   movimento.lote
                   ||
                   "-"
                 )}
-
               </td>
 
               <td>
-
                 ${quantidade}
-
               </td>
 
               <td>
-
                 ${esc(
                   movimento.destino
                   ||
@@ -4437,17 +5331,14 @@ function gerarRelatorio() {
                   ||
                   "-"
                 )}
-
               </td>
 
               <td>
-
                 ${esc(
                   movimento.responsavelNome
                   ||
                   "-"
                 )}
-
               </td>
 
             </tr>
@@ -4462,14 +5353,18 @@ function gerarRelatorio() {
 
 
   // =======================================================
-  // CONTADORES DE ENTRADAS E SAÍDAS
+  // TOTAIS DE ENTRADAS E SAÍDAS
   // =======================================================
 
   if (
     ![
+
       "entradas",
+
       "saidas",
+
       "movimentacoes"
+
     ].includes(
       tipo
     )
@@ -4495,8 +5390,8 @@ function gerarRelatorio() {
       movimentosPeriodo
 
         .filter(
-          mov =>
-            mov.tipo
+          movimento =>
+            movimento.tipo
             ===
             "entrada"
         )
@@ -4504,13 +5399,13 @@ function gerarRelatorio() {
         .reduce(
           (
             total,
-            mov
+            movimento
           ) =>
 
             total
             +
             Number(
-              mov.quantidade
+              movimento.quantidade
               ||
               0
             ),
@@ -4523,8 +5418,8 @@ function gerarRelatorio() {
       movimentosPeriodo
 
         .filter(
-          mov =>
-            mov.tipo
+          movimento =>
+            movimento.tipo
             ===
             "saida"
         )
@@ -4532,13 +5427,13 @@ function gerarRelatorio() {
         .reduce(
           (
             total,
-            mov
+            movimento
           ) =>
 
             total
             +
             Number(
-              mov.quantidade
+              movimento.quantidade
               ||
               0
             ),
@@ -4557,25 +5452,40 @@ function gerarRelatorio() {
     !registros.length
   ) {
 
-    const colspan =
+    let colspan =
+      6;
 
+
+    if (
+      tipo
+      ===
+      "estoque"
+    ) {
+
+      colspan =
+        7;
+
+    }
+
+
+    if (
       [
+
         "entradas",
+
         "saidas",
+
         "movimentacoes"
+
       ].includes(
         tipo
       )
-        ?
-        7
-        :
-        tipo
-        ===
-        "estoque"
-          ?
-          6
-          :
-          5;
+    ) {
+
+      colspan =
+        8;
+
+    }
 
 
     body = `
@@ -4594,10 +5504,6 @@ function gerarRelatorio() {
 
   }
 
-
-  // =======================================================
-  // MOSTRAR RESULTADO
-  // =======================================================
 
   $("relatorioTitulo")
     .textContent =
@@ -4660,7 +5566,7 @@ function gerarRelatorio() {
 
 
 // =========================================================
-// BOTÃO GERAR RELATÓRIO
+// EVENTOS RELATÓRIOS
 // =========================================================
 
 $("btnGerarRelatorio")
@@ -4670,20 +5576,12 @@ $("btnGerarRelatorio")
   );
 
 
-// =========================================================
-// ALTERAR TIPO DO RELATÓRIO
-// =========================================================
-
 $("relatorioTipo")
   ?.addEventListener(
     "change",
     gerarRelatorio
   );
 
-
-// =========================================================
-// GERAR PDF
-// =========================================================
 
 $("btnPdfRelatorio")
   ?.addEventListener(
@@ -4692,7 +5590,6 @@ $("btnPdfRelatorio")
 
       gerarRelatorio();
 
-
       gerarPDFRelatorio();
 
     }
@@ -4700,7 +5597,7 @@ $("btnPdfRelatorio")
 
 
 // =========================================================
-// PDF VIA IMPRESSÃO
+// PDF
 // =========================================================
 
 function gerarPDFRelatorio() {
@@ -4710,17 +5607,13 @@ function gerarPDFRelatorio() {
   ) {
 
     alert(
-      "Gere um relatório antes de criar o PDF."
+      "Gere o relatório antes de criar o PDF."
     );
 
 
     return;
 
   }
-
-
-  const titulo =
-    relatorioAtual.titulo;
 
 
   const dataGeracao =
@@ -4730,14 +5623,18 @@ function gerarPDFRelatorio() {
       );
 
 
-  const periodoInicial =
+  const inicio =
     $("relatorioDataInicial")
-      ?.value;
+      ?.value
+    ||
+    "";
 
 
-  const periodoFinal =
+  const fim =
     $("relatorioDataFinal")
-      ?.value;
+      ?.value
+    ||
+    "";
 
 
   let periodo =
@@ -4745,41 +5642,41 @@ function gerarPDFRelatorio() {
 
 
   if (
-    periodoInicial
+    inicio
     &&
-    periodoFinal
+    fim
   ) {
 
     periodo =
 
       `${formatDateBR(
-        periodoInicial
+        inicio
       )} a ${formatDateBR(
-        periodoFinal
+        fim
       )}`;
 
   }
 
   else if (
-    periodoInicial
+    inicio
   ) {
 
     periodo =
 
       `A partir de ${formatDateBR(
-        periodoInicial
+        inicio
       )}`;
 
   }
 
   else if (
-    periodoFinal
+    fim
   ) {
 
     periodo =
 
       `Até ${formatDateBR(
-        periodoFinal
+        fim
       )}`;
 
   }
@@ -4835,11 +5732,9 @@ function gerarPDFRelatorio() {
       >
 
       <title>
-
         ${esc(
-          titulo
+          relatorioAtual.titulo
         )}
-
       </title>
 
       <style>
@@ -4855,9 +5750,9 @@ function gerarPDFRelatorio() {
             Helvetica,
             sans-serif;
 
-          color: #222222;
-
           margin: 30px;
+
+          color: #222222;
 
         }
 
@@ -4944,11 +5839,11 @@ function gerarPDFRelatorio() {
 
           display: block;
 
+          margin-top: 5px;
+
           color: #17375e;
 
           font-size: 19px;
-
-          margin-top: 5px;
 
         }
 
@@ -4958,7 +5853,7 @@ function gerarPDFRelatorio() {
 
           border-collapse: collapse;
 
-          font-size: 11px;
+          font-size: 10px;
 
         }
 
@@ -4966,13 +5861,13 @@ function gerarPDFRelatorio() {
 
           background: #17375e;
 
-          color: white;
-
-          padding: 8px;
+          color: #ffffff;
 
           border:
             1px solid
             #cccccc;
+
+          padding: 7px;
 
           text-align: left;
 
@@ -4980,11 +5875,11 @@ function gerarPDFRelatorio() {
 
         td {
 
-          padding: 7px;
-
           border:
             1px solid
             #cccccc;
+
+          padding: 7px;
 
         }
 
@@ -5041,46 +5936,35 @@ function gerarPDFRelatorio() {
       <div class="cabecalho">
 
         <h1>
-
           SISFAR V2
-
         </h1>
 
         <h2>
-
           ${esc(
-            titulo
+            relatorioAtual.titulo
           )}
-
         </h2>
 
         <p>
-
           Sistema Integrado de Controle de Estoque de Farmácia
-
         </p>
 
         <p>
-
-          Período:
-          ${esc(
+          Período: ${esc(
             periodo
           )}
-
         </p>
 
         <p>
-
-          Gerado em:
-          ${esc(
+          Gerado em: ${esc(
             dataGeracao
           )}
-
         </p>
 
         <p>
 
           Responsável:
+
           ${esc(
             usuarioAtual?.nome
             ||
@@ -5101,9 +5985,7 @@ function gerarPDFRelatorio() {
           Registros
 
           <strong>
-
             ${relatorioAtual.registros.length}
-
           </strong>
 
         </div>
@@ -5114,9 +5996,7 @@ function gerarPDFRelatorio() {
           Quantidade
 
           <strong>
-
             ${relatorioAtual.totalQuantidade}
-
           </strong>
 
         </div>
@@ -5127,9 +6007,7 @@ function gerarPDFRelatorio() {
           Entradas
 
           <strong>
-
             ${relatorioAtual.totalEntradas}
-
           </strong>
 
         </div>
@@ -5140,9 +6018,7 @@ function gerarPDFRelatorio() {
           Saídas
 
           <strong>
-
             ${relatorioAtual.totalSaidas}
-
           </strong>
 
         </div>
@@ -5155,7 +6031,7 @@ function gerarPDFRelatorio() {
 
       <div class="rodape">
 
-        SISFAR V2 -
+        SISFAR V2 —
         Relatório gerado eletronicamente pelo sistema.
 
       </div>
@@ -5166,12 +6042,15 @@ function gerarPDFRelatorio() {
         window.onload = function() {
 
           setTimeout(
+
             function() {
 
               window.print();
 
             },
+
             500
+
           );
 
         };
@@ -5192,5 +6071,5 @@ function gerarPDFRelatorio() {
 
 
 // =========================================================
-// FIM APP.JS
+// FIM
 // =========================================================
