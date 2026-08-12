@@ -1,0 +1,790 @@
+:root {
+  --bg: #f3f6f9;
+  --card: #ffffff;
+  --primary: #17375e;
+  --primary2: #24558a;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #d9e1ea;
+  --danger: #b42318;
+  --success: #16794b;
+  --warning: #b26a00;
+  --sidebar: 260px;
+}
+
+
+/* =========================================
+   CONFIGURAÇÕES GERAIS
+========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.hidden {
+  display: none !important;
+}
+
+
+/* =========================================
+   LOGIN
+========================================= */
+
+.login-screen {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: linear-gradient(
+    135deg,
+    #102b4e,
+    #244f7c
+  );
+}
+
+
+.login-card {
+  width: min(430px, 100%);
+
+  background: #ffffff;
+
+  border-radius: 18px;
+
+  padding: 32px;
+
+  box-shadow:
+    0 18px 50px
+    rgba(0, 0, 0, 0.22);
+}
+
+
+.brand {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+
+.brand h1 {
+  margin: 0;
+
+  color: var(--primary);
+
+  font-size: 30px;
+}
+
+
+.brand p {
+  margin: 8px 0 0;
+
+  color: var(--muted);
+}
+
+
+/* =========================================
+   CAMPOS
+========================================= */
+
+.field {
+  margin-bottom: 16px;
+}
+
+
+.field label {
+  display: block;
+
+  font-weight: 700;
+
+  margin-bottom: 7px;
+}
+
+
+.field input,
+.field select {
+  width: 100%;
+
+  padding: 12px 13px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #ffffff;
+}
+
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--primary2);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(36, 85, 138, 0.12);
+}
+
+
+/* =========================================
+   BOTÕES
+========================================= */
+
+.btn {
+  border: 0;
+
+  border-radius: 10px;
+
+  padding: 11px 16px;
+
+  cursor: pointer;
+
+  font-weight: 700;
+
+  transition: 0.2s;
+}
+
+
+.btn:hover {
+  opacity: 0.9;
+
+  transform: translateY(-1px);
+}
+
+
+.btn-primary {
+  background: var(--primary);
+
+  color: #ffffff;
+}
+
+
+.btn-secondary {
+  background: #eaf0f6;
+
+  color: var(--primary);
+}
+
+
+.btn-danger {
+  background: #fee4e2;
+
+  color: var(--danger);
+}
+
+
+.btn-full {
+  width: 100%;
+}
+
+
+/* =========================================
+   MENSAGENS
+========================================= */
+
+.message {
+  margin-top: 15px;
+
+  padding: 10px 12px;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+}
+
+
+.message.error {
+  background: #fee4e2;
+
+  color: #8a1c13;
+}
+
+
+.message.ok {
+  background: #dcfae6;
+
+  color: #146c43;
+}
+
+
+/* =========================================
+   ESTRUTURA DO SISTEMA
+========================================= */
+
+.app {
+  min-height: 100vh;
+
+  display: flex;
+}
+
+
+/* =========================================
+   MENU LATERAL
+========================================= */
+
+.sidebar {
+  position: fixed;
+
+  inset:
+    0
+    auto
+    0
+    0;
+
+  width: var(--sidebar);
+
+  background: var(--primary);
+
+  color: #ffffff;
+
+  padding: 20px 14px;
+
+  z-index: 20;
+
+  overflow-y: auto;
+}
+
+
+.sidebar-brand {
+  padding:
+    8px
+    12px
+    22px;
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.16);
+
+  margin-bottom: 15px;
+}
+
+
+.sidebar-brand h2 {
+  margin: 0;
+
+  font-size: 23px;
+}
+
+
+.sidebar-brand small {
+  opacity: 0.8;
+}
+
+
+/* =========================================
+   BOTÕES DO MENU
+========================================= */
+
+.nav-btn {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #ffffff;
+
+  padding: 12px;
+
+  border-radius: 9px;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  margin: 3px 0;
+
+  transition: 0.2s;
+}
+
+
+.nav-btn:hover,
+.nav-btn.active {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.15
+    );
+}
+
+
+/* =========================================
+   CONTEÚDO PRINCIPAL
+========================================= */
+
+.main {
+  margin-left: var(--sidebar);
+
+  width:
+    calc(
+      100% - var(--sidebar)
+    );
+
+  min-height: 100vh;
+}
+
+
+/* =========================================
+   BARRA SUPERIOR
+========================================= */
+
+.topbar {
+  min-height: 70px;
+
+  background: #ffffff;
+
+  border-bottom:
+    1px solid
+    var(--border);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 12px 24px;
+
+  position: sticky;
+
+  top: 0;
+
+  z-index: 10;
+}
+
+
+.top-user strong {
+  display: block;
+}
+
+
+.top-user small {
+  color: var(--muted);
+}
+
+
+/* =========================================
+   ÁREA DE CONTEÚDO
+========================================= */
+
+.content {
+  padding: 24px;
+}
+
+
+.page-title {
+  margin:
+    0
+    0
+    18px;
+
+  color: var(--primary);
+}
+
+
+/* =========================================
+   CARDS DO DASHBOARD
+========================================= */
+
+.cards {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+
+  gap: 16px;
+
+  margin-bottom: 22px;
+}
+
+
+.card {
+  background: var(--card);
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius: 14px;
+
+  padding: 18px;
+
+  box-shadow:
+    0 2px 8px
+    rgba(16, 24, 40, 0.04);
+}
+
+
+.stat-label {
+  color: var(--muted);
+
+  font-size: 14px;
+}
+
+
+.stat-value {
+  font-size: 29px;
+
+  font-weight: 800;
+
+  color: var(--primary);
+
+  margin-top: 7px;
+}
+
+
+/* =========================================
+   PAINÉIS
+========================================= */
+
+.panel {
+  background: #ffffff;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius: 14px;
+
+  padding: 18px;
+
+  margin-bottom: 20px;
+}
+
+
+.panel-head {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 14px;
+}
+
+
+.panel-head h3 {
+  margin: 0;
+
+  color: var(--primary);
+}
+
+
+/* =========================================
+   TABELAS
+========================================= */
+
+.table-wrap {
+  overflow: auto;
+}
+
+
+table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  min-width: 760px;
+}
+
+
+th,
+td {
+  padding: 11px 10px;
+
+  border-bottom:
+    1px solid
+    #edf1f5;
+
+  text-align: left;
+
+  font-size: 14px;
+}
+
+
+th {
+  color: var(--primary);
+
+  background: #f8fafc;
+
+  font-weight: 700;
+}
+
+
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+
+/* =========================================
+   BADGES / STATUS
+========================================= */
+
+.badge {
+  display: inline-block;
+
+  border-radius: 999px;
+
+  padding: 5px 9px;
+
+  font-size: 12px;
+
+  font-weight: 700;
+}
+
+
+.badge.ok {
+  background: #dcfae6;
+
+  color: #146c43;
+}
+
+
+.badge.warning {
+  background: #fff1cc;
+
+  color: #8c5b00;
+}
+
+
+.badge.danger {
+  background: #fee4e2;
+
+  color: #8a1c13;
+}
+
+
+.badge.info {
+  background: #e7f0ff;
+
+  color: #244f7c;
+}
+
+
+/* =========================================
+   BARRA DE PESQUISA / FILTROS
+========================================= */
+
+.toolbar {
+  display: flex;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+
+  margin-bottom: 14px;
+}
+
+
+.toolbar input,
+.toolbar select {
+  padding: 10px 12px;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius: 9px;
+
+  background: #ffffff;
+}
+
+
+/* =========================================
+   FORMULÁRIOS
+========================================= */
+
+.form-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 14px;
+}
+
+
+.form-actions {
+  grid-column:
+    1 / -1;
+
+  display: flex;
+
+  gap: 10px;
+
+  justify-content: flex-end;
+
+  margin-top: 8px;
+}
+
+
+/* =========================================
+   AVISOS
+========================================= */
+
+.notice {
+  background: #eef4fb;
+
+  color: #244f7c;
+
+  border:
+    1px solid
+    #cddff3;
+
+  border-radius: 10px;
+
+  padding: 12px 14px;
+
+  margin-bottom: 18px;
+}
+
+
+/* =========================================
+   CORES DE TEXTO
+========================================= */
+
+.danger-text {
+  color: var(--danger);
+}
+
+
+.warning-text {
+  color: var(--warning);
+}
+
+
+.success-text {
+  color: var(--success);
+}
+
+
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
+
+@media
+(max-width: 1000px) {
+
+  .cards {
+    grid-template-columns:
+      repeat(
+        2,
+        1fr
+      );
+  }
+
+}
+
+
+/* =========================================
+   CELULAR
+========================================= */
+
+@media
+(max-width: 760px) {
+
+  .sidebar {
+    position: static;
+
+    width: 100%;
+
+    min-height: auto;
+  }
+
+
+  .app {
+    display: block;
+  }
+
+
+  .main {
+    margin-left: 0;
+
+    width: 100%;
+  }
+
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .topbar {
+    position: static;
+  }
+
+
+  .content {
+    padding: 16px;
+  }
+
+
+  .panel {
+    padding: 14px;
+  }
+
+
+  .panel-head {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+
+  .toolbar {
+    flex-direction: column;
+  }
+
+
+  .toolbar input,
+  .toolbar select {
+    width: 100%;
+  }
+
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+
+  .form-actions .btn {
+    width: 100%;
+  }
+
+}
