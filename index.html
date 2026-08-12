@@ -19,9 +19,9 @@
 
 <body>
 
-  <!-- ========================================= -->
+  <!-- ===================================================== -->
   <!-- LOGIN -->
-  <!-- ========================================= -->
+  <!-- ===================================================== -->
 
   <section
     id="loginScreen"
@@ -91,18 +91,18 @@
   </section>
 
 
-  <!-- ========================================= -->
+  <!-- ===================================================== -->
   <!-- SISTEMA -->
-  <!-- ========================================= -->
+  <!-- ===================================================== -->
 
   <section
     id="appScreen"
     class="app hidden"
   >
 
-    <!-- ========================================= -->
+    <!-- ===================================================== -->
     <!-- MENU LATERAL -->
-    <!-- ========================================= -->
+    <!-- ===================================================== -->
 
     <aside class="sidebar">
 
@@ -191,16 +191,16 @@
     </aside>
 
 
-    <!-- ========================================= -->
+    <!-- ===================================================== -->
     <!-- ÁREA PRINCIPAL -->
-    <!-- ========================================= -->
+    <!-- ===================================================== -->
 
     <main class="main">
 
 
-      <!-- ========================================= -->
-      <!-- BARRA SUPERIOR -->
-      <!-- ========================================= -->
+      <!-- ===================================================== -->
+      <!-- TOPO -->
+      <!-- ===================================================== -->
 
       <header class="topbar">
 
@@ -231,9 +231,9 @@
       <div class="content">
 
 
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
         <!-- DASHBOARD -->
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
 
         <section
           id="page-dashboard"
@@ -367,9 +367,9 @@
         </section>
 
 
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
         <!-- ESTOQUE -->
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
 
         <section
           id="page-estoque"
@@ -381,7 +381,7 @@
 
             <h1
               class="page-title"
-              style="margin:0"
+              style="margin: 0;"
             >
               Estoque
             </h1>
@@ -396,6 +396,10 @@
 
           </div>
 
+
+          <!-- ===================================================== -->
+          <!-- FORMULÁRIO DE PRODUTO -->
+          <!-- ===================================================== -->
 
           <div
             id="produtoFormPanel"
@@ -428,6 +432,22 @@
                 <input
                   id="produtoNome"
                   required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Código de barras
+                </label>
+
+                <input
+                  id="produtoCodigoBarras"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  placeholder="Ex.: 7891234567890"
                 >
 
               </div>
@@ -532,6 +552,10 @@
           </div>
 
 
+          <!-- ===================================================== -->
+          <!-- TABELA DE ESTOQUE -->
+          <!-- ===================================================== -->
+
           <div class="panel">
 
 
@@ -539,7 +563,7 @@
 
               <input
                 id="searchProduto"
-                placeholder="Pesquisar produto..."
+                placeholder="Pesquisar por produto, apresentação ou código de barras..."
               >
 
             </div>
@@ -554,6 +578,8 @@
                   <tr>
 
                     <th>Produto</th>
+
+                    <th>Código de barras</th>
 
                     <th>Apresentação</th>
 
@@ -584,9 +610,9 @@
         </section>
 
 
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
         <!-- ENTRADA -->
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
 
         <section
           id="page-entrada"
@@ -601,10 +627,33 @@
           <div class="panel">
 
 
+            <div class="notice">
+
+              Você pode localizar o produto pelo nome ou informar o código de barras.
+
+            </div>
+
+
             <form
               id="entradaForm"
               class="form-grid"
             >
+
+
+              <div class="field">
+
+                <label>
+                  Código de barras
+                </label>
+
+                <input
+                  id="entradaCodigoBarras"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  placeholder="Digite ou leia o código de barras"
+                >
+
+              </div>
 
 
               <div class="field">
@@ -714,9 +763,9 @@
         </section>
 
 
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
         <!-- BAIXA -->
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
 
         <section
           id="page-baixa"
@@ -730,8 +779,8 @@
 
           <div class="notice">
 
-            O sistema apresenta os lotes do produto em ordem de validade,
-            ajudando a aplicar FEFO: primeiro que vence, primeiro que sai.
+            O sistema apresenta os lotes em ordem de validade,
+            priorizando o FEFO: primeiro que vence, primeiro que sai.
 
           </div>
 
@@ -743,6 +792,22 @@
               id="baixaForm"
               class="form-grid"
             >
+
+
+              <div class="field">
+
+                <label>
+                  Código de barras
+                </label>
+
+                <input
+                  id="baixaCodigoBarras"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  placeholder="Digite ou leia o código de barras"
+                >
+
+              </div>
 
 
               <div class="field">
@@ -881,9 +946,9 @@
         </section>
 
 
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
         <!-- MOVIMENTAÇÕES -->
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
 
         <section
           id="page-movimentacoes"
@@ -920,7 +985,7 @@
 
               <input
                 id="movBusca"
-                placeholder="Pesquisar produto, lote ou responsável..."
+                placeholder="Pesquisar produto, lote, código ou responsável..."
               >
 
             </div>
@@ -939,6 +1004,8 @@
                     <th>Tipo</th>
 
                     <th>Produto</th>
+
+                    <th>Código</th>
 
                     <th>Lote</th>
 
@@ -965,9 +1032,9 @@
         </section>
 
 
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
         <!-- LOTES E VALIDADES -->
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
 
         <section
           id="page-validade"
@@ -991,6 +1058,8 @@
                   <tr>
 
                     <th>Produto</th>
+
+                    <th>Código</th>
 
                     <th>Lote</th>
 
@@ -1017,9 +1086,9 @@
         </section>
 
 
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
         <!-- RELATÓRIOS -->
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
 
         <section
           id="page-relatorios"
@@ -1118,7 +1187,7 @@
 
                 <input
                   id="relatorioBusca"
-                  placeholder="Produto, lote, responsável..."
+                  placeholder="Produto, lote, código, responsável..."
                 >
 
               </div>
@@ -1151,6 +1220,7 @@
 
 
           <div class="cards">
+
 
             <div class="card">
 
@@ -1271,28 +1341,170 @@
         </section>
 
 
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
         <!-- USUÁRIOS -->
-        <!-- ========================================= -->
+        <!-- ===================================================== -->
 
         <section
           id="page-usuarios"
           class="page hidden"
         >
 
-          <h1 class="page-title">
-            Usuários
-          </h1>
+          <div class="panel-head">
+
+            <h1
+              class="page-title"
+              style="margin: 0;"
+            >
+              Usuários
+            </h1>
+
+          </div>
 
 
           <div class="notice">
 
-            Os usuários são autenticados pelo Firebase Authentication e
-            possuem seus perfis registrados na coleção
-            <strong>usuarios</strong>.
+            O Gestor pode alterar nome, perfil e situação dos usuários.
+            A criação da conta de login continua sendo realizada no Firebase Authentication.
 
           </div>
 
+
+          <!-- ===================================================== -->
+          <!-- FORMULÁRIO DE USUÁRIO -->
+          <!-- ===================================================== -->
+
+          <div
+            id="usuarioFormPanel"
+            class="panel hidden"
+          >
+
+            <h3>
+              Editar usuário
+            </h3>
+
+
+            <form
+              id="usuarioForm"
+              class="form-grid"
+            >
+
+
+              <input
+                type="hidden"
+                id="usuarioId"
+              >
+
+
+              <div class="field">
+
+                <label>
+                  Nome
+                </label>
+
+                <input
+                  id="usuarioNome"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  E-mail
+                </label>
+
+                <input
+                  id="usuarioEmail"
+                  type="email"
+                  readonly
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Perfil
+                </label>
+
+                <select
+                  id="usuarioPerfil"
+                  required
+                >
+
+                  <option value="gestor">
+                    Gestor
+                  </option>
+
+                  <option value="farmacia">
+                    Farmácia
+                  </option>
+
+                  <option value="consulta">
+                    Consulta
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Situação
+                </label>
+
+                <select
+                  id="usuarioAtivo"
+                  required
+                >
+
+                  <option value="true">
+                    Ativo
+                  </option>
+
+                  <option value="false">
+                    Inativo
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div class="form-actions">
+
+                <button
+                  type="button"
+                  id="cancelUsuario"
+                  class="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
+
+
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                >
+                  Salvar alterações
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+
+          <!-- ===================================================== -->
+          <!-- LISTA DE USUÁRIOS -->
+          <!-- ===================================================== -->
 
           <div class="panel">
 
@@ -1311,7 +1523,9 @@
 
                     <th>Perfil</th>
 
-                    <th>Ativo</th>
+                    <th>Situação</th>
+
+                    <th>Ações</th>
 
                   </tr>
 
@@ -1337,9 +1551,9 @@
   </section>
 
 
-  <!-- ========================================= -->
+  <!-- ===================================================== -->
   <!-- JAVASCRIPT -->
-  <!-- ========================================= -->
+  <!-- ===================================================== -->
 
   <script
     type="module"
