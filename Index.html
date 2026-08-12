@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SISFAR V2 - Controle de Estoque</title>
+  <style>
+    :root{
+      --bg:#f3f6f9;
+      --card:#ffffff;
+      --primary:#17375e;
+      --primary2:#24558a;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --border:#d9e1ea;
+      --danger:#b42318;
+      --success:#16794b;
+      --warning:#b26a00;
+      --sidebar:260px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    button,input,select{font:inherit}
+    .hidden{display:none!important}
+    .login-screen{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:linear-gradient(135deg,#102b4e,#244f7c);
+    }
+    .login-card{
+      width:min(430px,100%);
+      background:#fff;
+      border-radius:18px;
+      padding:32px;
+      box-shadow:0 18px 50px rgba(0,0,0,.22);
+    }
+    .brand{text-align:center;margin-bottom:26px}
+    .brand h1{margin:0;color:var(--primary);font-size:30px}
+    .brand p{margin:8px 0 0;color:var(--muted)}
+    .field{margin-bottom:16px}
+    .field label{display:block;font-weight:700;margin-bottom:7px}
+    .field input,.field select{
+      width:100%;
+      padding:12px 13px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      outline:none;
+      background:#fff;
+    }
+    .field input:focus,.field select:focus{
+      border-color:var(--primary2);
+      box-shadow:0 0 0 3px rgba(36,85,138,.12);
+    }
+    .btn{
+      border:0;
+      border-radius:10px;
+      padding:11px 16px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-secondary{background:#eaf0f6;color:var(--primary)}
+    .btn-danger{background:#fee4e2;color:var(--danger)}
+    .btn-full{width:100%}
+    .message{margin-top:15px;padding:10px 12px;border-radius:9px;font-size:14px}
+    .message.error{background:#fee4e2;color:#8a1c13}
+    .message.ok{background:#dcfae6;color:#146c43}
+
+    .app{min-height:100vh;display:flex}
+    .sidebar{
+      position:fixed;
+      inset:0 auto 0 0;
+      width:var(--sidebar);
+      background:var(--primary);
+      color:#fff;
+      padding:20px 14px;
+      z-index:20;
+      overflow-y:auto;
+    }
+    .sidebar-brand{
+      padding:8px 12px 22px;
+      border-bottom:1px solid rgba(255,255,255,.16);
+      margin-bottom:15px;
+    }
+    .sidebar-brand h2{margin:0;font-size:23px}
+    .sidebar-brand small{opacity:.8}
+    .nav-btn{
+      width:100%;
+      display:flex;
+      align-items:center;
+      gap:9px;
+      border:0;
+      background:transparent;
+      color:#fff;
+      padding:12px;
+      border-radius:9px;
+      cursor:pointer;
+      text-align:left;
+      margin:3px 0;
+    }
+    .nav-btn:hover,.nav-btn.active{background:rgba(255,255,255,.15)}
+    .main{
+      margin-left:var(--sidebar);
+      width:calc(100% - var(--sidebar));
+      min-height:100vh;
+    }
+    .topbar{
+      min-height:70px;
+      background:#fff;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 24px;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+    .top-user strong{display:block}
+    .top-user small{color:var(--muted)}
+    .content{padding:24px}
+    .page-title{margin:0 0 18px;color:var(--primary)}
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:16px;
+      margin-bottom:22px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 2px 8px rgba(16,24,40,.04);
+    }
+    .stat-label{color:var(--muted);font-size:14px}
+    .stat-value{font-size:29px;font-weight:800;color:var(--primary);margin-top:7px}
+    .panel{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px;
+      margin-bottom:20px;
+    }
+    .panel-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .panel-head h3{margin:0;color:var(--primary)}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:760px}
+    th,td{padding:11px 10px;border-bottom:1px solid #edf1f5;text-align:left;font-size:14px}
+    th{color:var(--primary);background:#f8fafc}
+    .badge{
+      display:inline-block;
+      border-radius:999px;
+      padding:5px 9px;
+      font-size:12px;
+      font-weight:700;
+    }
+    .badge.ok{background:#dcfae6;color:#146c43}
+    .badge.warning{background:#fff1cc;color:#8c5b00}
+    .badge.danger{background:#fee4e2;color:#8a1c13}
+    .badge.info{background:#e7f0ff;color:#244f7c}
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .toolbar input,.toolbar select{
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:9px;
+      background:#fff;
+    }
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+    .form-actions{
+      grid-column:1/-1;
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      margin-top:8px;
+    }
+    .notice{
+      background:#eef4fb;
+      color:#244f7c;
+      border:1px solid #cddff3;
+      border-radius:10px;
+      padding:12px 14px;
+      margin-bottom:18px;
+    }
+    .danger-text{color:var(--danger)}
+    .warning-text{color:var(--warning)}
+    .success-text{color:var(--success)}
+
+    @media(max-width:1000px){
+      .cards{grid-template-columns:repeat(2,1fr)}
+    }
+    @media(max-width:760px){
+      .sidebar{
+        position:static;
+        width:100%;
+        min-height:auto;
+      }
+      .app{display:block}
+      .main{margin-left:0;width:100%}
+      .cards{grid-template-columns:1fr}
+      .form-grid{grid-template-columns:1fr}
+      .topbar{position:static}
+      .content{padding:16px}
+    }
+  </style>
+</head>
+<body>
+
+<section id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="brand">
+      <h1>SISFAR V2</h1>
+      <p>Sistema Integrado de Controle de Estoque de Farmácia</p>
+    </div>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail">E-mail</label>
+        <input id="loginEmail" type="email" required autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="loginSenha">Senha</label>
+        <input id="loginSenha" type="password" required autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary btn-full" type="submit">Entrar</button>
+      <div id="loginMsg" class="message hidden"></div>
+    </form>
+  </div>
+</section>
+
+<section id="appScreen" class="app hidden">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>SISFAR V2</h2>
+      <small>Controle de Farmácia</small>
+    </div>
+
+    <button class="nav-btn active" data-page="dashboard">🏠 Dashboard</button>
+    <button class="nav-btn" data-page="estoque">📦 Estoque</button>
+    <button class="nav-btn perm-operacao" data-page="entrada">➕ Entrada</button>
+    <button class="nav-btn perm-operacao" data-page="baixa">➖ Baixa / Saída</button>
+    <button class="nav-btn" data-page="movimentacoes">🔄 Movimentações</button>
+    <button class="nav-btn" data-page="validade">📅 Lotes e Validades</button>
+    <button class="nav-btn gestor-only" data-page="usuarios">👥 Usuários</button>
+    <button class="nav-btn" id="logoutBtn">🚪 Sair</button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <strong id="pageHeader">Dashboard</strong>
+      </div>
+      <div class="top-user">
+        <strong id="userName">Usuário</strong>
+        <small id="userProfile">perfil</small>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <section id="page-dashboard" class="page">
+        <h1 class="page-title">Dashboard</h1>
+        <div class="cards">
+          <div class="card">
+            <div class="stat-label">Produtos cadastrados</div>
+            <div id="statProdutos" class="stat-value">0</div>
+          </div>
+          <div class="card">
+            <div class="stat-label">Quantidade total em estoque</div>
+            <div id="statQuantidade" class="stat-value">0</div>
+          </div>
+          <div class="card">
+            <div class="stat-label">Estoque baixo</div>
+            <div id="statBaixo" class="stat-value">0</div>
+          </div>
+          <div class="card">
+            <div class="stat-label">Próximos do vencimento</div>
+            <div id="statVencendo" class="stat-value">0</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Atenção de estoque e validade</h3>
+            <button class="btn btn-secondary" id="refreshDashboard">Atualizar</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Lote</th>
+                  <th>Validade</th>
+                  <th>Quantidade</th>
+                  <th>Situação</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardAlertas"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-estoque" class="page hidden">
+        <div class="panel-head">
+          <h1 class="page-title" style="margin:0">Estoque</h1>
+          <button id="btnNovoProduto" class="btn btn-primary perm-operacao">Novo produto</button>
+        </div>
+
+        <div id="produtoFormPanel" class="panel hidden">
+          <h3 id="produtoFormTitulo">Cadastrar produto</h3>
+          <form id="produtoForm" class="form-grid">
+            <input type="hidden" id="produtoId" />
+            <div class="field">
+              <label>Nome do produto</label>
+              <input id="produtoNome" required />
+            </div>
+            <div class="field">
+              <label>Apresentação</label>
+              <input id="produtoApresentacao" placeholder="Ex.: comprimido 500 mg" />
+            </div>
+            <div class="field">
+              <label>Categoria</label>
+              <input id="produtoCategoria" placeholder="Ex.: medicamento, material" />
+            </div>
+            <div class="field">
+              <label>Unidade</label>
+              <input id="produtoUnidade" placeholder="Ex.: un, cx, frasco" required />
+            </div>
+            <div class="field">
+              <label>Estoque mínimo</label>
+              <input id="produtoMinimo" type="number" min="0" value="0" required />
+            </div>
+            <div class="field">
+              <label>Localização</label>
+              <input id="produtoLocalizacao" placeholder="Ex.: Armário A / Prateleira 2" />
+            </div>
+            <div class="form-actions">
+              <button type="button" id="cancelProduto" class="btn btn-secondary">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="toolbar">
+            <input id="searchProduto" placeholder="Pesquisar produto..." />
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Apresentação</th>
+                  <th>Unidade</th>
+                  <th>Qtd. total</th>
+                  <th>Mínimo</th>
+                  <th>Situação</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="estoqueBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-entrada" class="page hidden">
+        <h1 class="page-title">Entrada de estoque</h1>
+        <div class="panel">
+          <form id="entradaForm" class="form-grid">
+            <div class="field">
+              <label>Produto</label>
+              <select id="entradaProduto" required></select>
+            </div>
+            <div class="field">
+              <label>Lote</label>
+              <input id="entradaLote" required />
+            </div>
+            <div class="field">
+              <label>Validade</label>
+              <input id="entradaValidade" type="date" required />
+            </div>
+            <div class="field">
+              <label>Quantidade</label>
+              <input id="entradaQuantidade" type="number" min="1" required />
+            </div>
+            <div class="field">
+              <label>Origem / Fornecedor</label>
+              <input id="entradaOrigem" />
+            </div>
+            <div class="field">
+              <label>Observação</label>
+              <input id="entradaObs" />
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Registrar entrada</button>
+            </div>
+          </form>
+          <div id="entradaMsg" class="message hidden"></div>
+        </div>
+      </section>
+
+      <section id="page-baixa" class="page hidden">
+        <h1 class="page-title">Baixa / Saída</h1>
+        <div class="notice">
+          O sistema apresenta os lotes do produto em ordem de validade, ajudando a aplicar FEFO: primeiro que vence, primeiro que sai.
+        </div>
+        <div class="panel">
+          <form id="baixaForm" class="form-grid">
+            <div class="field">
+              <label>Produto</label>
+              <select id="baixaProduto" required></select>
+            </div>
+            <div class="field">
+              <label>Lote</label>
+              <select id="baixaLote" required></select>
+            </div>
+            <div class="field">
+              <label>Quantidade</label>
+              <input id="baixaQuantidade" type="number" min="1" required />
+            </div>
+            <div class="field">
+              <label>Destino</label>
+              <input id="baixaDestino" required />
+            </div>
+            <div class="field">
+              <label>Motivo</label>
+              <select id="baixaMotivo" required>
+                <option value="Consumo">Consumo</option>
+                <option value="Transferência">Transferência</option>
+                <option value="Perda">Perda</option>
+                <option value="Avaria">Avaria</option>
+                <option value="Vencimento">Vencimento</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Observação</label>
+              <input id="baixaObs" />
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Registrar baixa</button>
+            </div>
+          </form>
+          <div id="baixaMsg" class="message hidden"></div>
+        </div>
+      </section>
+
+      <section id="page-movimentacoes" class="page hidden">
+        <h1 class="page-title">Movimentações</h1>
+        <div class="panel">
+          <div class="toolbar">
+            <select id="movTipoFiltro">
+              <option value="">Todos os tipos</option>
+              <option value="entrada">Entradas</option>
+              <option value="saida">Saídas</option>
+            </select>
+            <input id="movBusca" placeholder="Pesquisar produto, lote ou responsável..." />
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data/Hora</th>
+                  <th>Tipo</th>
+                  <th>Produto</th>
+                  <th>Lote</th>
+                  <th>Quantidade</th>
+                  <th>Destino/Origem</th>
+                  <th>Responsável</th>
+                </tr>
+              </thead>
+              <tbody id="movBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-validade" class="page hidden">
+        <h1 class="page-title">Lotes e Validades</h1>
+        <div class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Lote</th>
+                  <th>Validade</th>
+                  <th>Quantidade</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="validadeBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-usuarios" class="page hidden">
+        <h1 class="page-title">Usuários</h1>
+        <div class="notice">
+          Nesta primeira versão, os usuários são criados pelo Firebase Authentication e recebem o perfil na coleção <b>usuarios</b>. O painel de criação automática será adicionado na próxima etapa.
+        </div>
+        <div class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Perfil</th>
+                  <th>Ativo</th>
+                </tr>
+              </thead>
+              <tbody id="usuariosBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</section>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+  import {
+    getFirestore,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    addDoc,
+    setDoc,
+    updateDoc,
+    deleteDoc,
+    query,
+    orderBy,
+    serverTimestamp,
+    runTransaction
+  } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyArFHNzeIiiWXhgsCqmJ8JAw9e0QAvZeX4",
+    authDomain: "sisfar-v2.firebaseapp.com",
+    projectId: "sisfar-v2",
+    storageBucket: "sisfar-v2.firebasestorage.app",
+    messagingSenderId: "165061409275",
+    appId: "1:165061409275:web:6e213eb846b0bf732f335e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let usuarioAtual = null;
+  let produtosCache = [];
+  let lotesCache = [];
+  let movimentosCache = [];
+
+  const $ = (id) => document.getElementById(id);
+  const loginScreen = $("loginScreen");
+  const appScreen = $("appScreen");
+
+  function showMsg(el, texto, tipo="error"){
+    el.textContent = texto;
+    el.className = `message ${tipo}`;
+  }
+
+  function hideMsg(el){
+    el.textContent = "";
+    el.className = "message hidden";
+  }
+
+  function esc(v=""){
+    return String(v)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function formatDateBR(value){
+    if(!value) return "-";
+    if(typeof value === "string"){
+      const [y,m,d] = value.split("-");
+      return (y && m && d) ? `${d}/${m}/${y}` : value;
+    }
+    if(value?.toDate) return value.toDate().toLocaleString("pt-BR");
+    return "-";
+  }
+
+  function diasAte(dataISO){
+    if(!dataISO) return 999999;
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    const alvo = new Date(`${dataISO}T00:00:00`);
+    return Math.ceil((alvo-hoje)/(1000*60*60*24));
+  }
+
+  function perfilLabel(p){
+    return ({
+      gestor:"Gestor",
+      farmacia:"Farmácia",
+      consulta:"Consulta"
+    })[p] || p;
+  }
+
+  function podeOperar(){
+    return ["gestor","farmacia"].includes(usuarioAtual?.perfil);
+  }
+
+  function isGestor(){
+    return usuarioAtual?.perfil === "gestor";
+  }
+
+  function aplicarPermissoes(){
+    document.querySelectorAll(".gestor-only").forEach(el=>{
+      el.classList.toggle("hidden", !isGestor());
+    });
+    document.querySelectorAll(".perm-operacao").forEach(el=>{
+      el.classList.toggle("hidden", !podeOperar());
+    });
+  }
+
+  $("loginForm").addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    hideMsg($("loginMsg"));
+    const email = $("loginEmail").value.trim();
+    const senha = $("loginSenha").value;
+
+    try{
+      await signInWithEmailAndPassword(auth,email,senha);
+    }catch(err){
+      console.error(err);
+      showMsg($("loginMsg"), "Não foi possível entrar. Verifique e-mail, senha e se o acesso por E-mail/Senha está ativado.");
+    }
+  });
+
+  $("logoutBtn").addEventListener("click", async ()=>{
+    await signOut(auth);
+  });
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){
+      usuarioAtual = null;
+      loginScreen.classList.remove("hidden");
+      appScreen.classList.add("hidden");
+      return;
+    }
+
+    try{
+      const snap = await getDoc(doc(db,"usuarios",user.uid));
+      if(!snap.exists()){
+        await signOut(auth);
+        showMsg($("loginMsg"),
+          `Usuário autenticado, mas não existe cadastro de perfil em usuarios/${user.uid}. Crie esse documento no Firestore.`);
+        return;
+      }
+
+      const dados = snap.data();
+      if(dados.ativo === false){
+        await signOut(auth);
+        showMsg($("loginMsg"),"Este usuário está desativado.");
+        return;
+      }
+
+      usuarioAtual = {
+        uid:user.uid,
+        email:user.email,
+        ...dados
+      };
+
+      $("userName").textContent = usuarioAtual.nome || user.email;
+      $("userProfile").textContent = perfilLabel(usuarioAtual.perfil);
+
+      aplicarPermissoes();
+      loginScreen.classList.add("hidden");
+      appScreen.classList.remove("hidden");
+
+      await carregarTudo();
+      abrirPagina("dashboard");
+    }catch(err){
+      console.error(err);
+      await signOut(auth);
+      showMsg($("loginMsg"),"Erro ao carregar o perfil. Verifique as regras do Firestore.");
+    }
+  });
+
+  document.querySelectorAll(".nav-btn[data-page]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      abrirPagina(btn.dataset.page);
+    });
+  });
+
+  function abrirPagina(page){
+    document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+    const destino = $(`page-${page}`);
+    if(destino) destino.classList.remove("hidden");
+
+    document.querySelectorAll(".nav-btn[data-page]").forEach(b=>{
+      b.classList.toggle("active",b.dataset.page===page);
+    });
+
+    const labels = {
+      dashboard:"Dashboard",
+      estoque:"Estoque",
+      entrada:"Entrada",
+      baixa:"Baixa / Saída",
+      movimentacoes:"Movimentações",
+      validade:"Lotes e Validades",
+      usuarios:"Usuários"
+    };
+    $("pageHeader").textContent = labels[page] || "SISFAR V2";
+
+    if(page==="dashboard") renderDashboard();
+    if(page==="estoque") renderEstoque();
+    if(page==="entrada") preencherSelectProdutos();
+    if(page==="baixa") preencherSelectProdutos();
+    if(page==="movimentacoes") renderMovimentacoes();
+    if(page==="validade") renderValidades();
+    if(page==="usuarios" && isGestor()) carregarUsuarios();
+  }
+
+  async function carregarTudo(){
+    await Promise.all([
+      carregarProdutos(),
+      carregarLotes(),
+      carregarMovimentacoes()
+    ]);
+    preencherSelectProdutos();
+    renderDashboard();
+    renderEstoque();
+    renderMovimentacoes();
+    renderValidades();
+  }
+
+  async function carregarProdutos(){
+    const snap = await getDocs(collection(db,"produtos"));
+    produtosCache = snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(a.nome||"").localeCompare(b.nome||"","pt-BR"));
+  }
+
+  async function carregarLotes(){
+    const snap = await getDocs(collection(db,"lotes"));
+    lotesCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+  }
+
+  async function carregarMovimentacoes(){
+    try{
+      const q = query(collection(db,"movimentacoes"),orderBy("criadoEm","desc"));
+      const snap = await getDocs(q);
+      movimentosCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+    }catch(err){
+      console.warn("Fallback sem orderBy:",err);
+      const snap = await getDocs(collection(db,"movimentacoes"));
+      movimentosCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+      movimentosCache.sort((a,b)=>{
+        const ad=a.criadoEm?.seconds||0;
+        const bd=b.criadoEm?.seconds||0;
+        return bd-ad;
+      });
+    }
+  }
+
+  function totalProduto(produtoId){
+    return lotesCache
+      .filter(l=>l.produtoId===produtoId)
+      .reduce((s,l)=>s+Number(l.quantidade||0),0);
+  }
+
+  function renderDashboard(){
+    const totalQtd = lotesCache.reduce((s,l)=>s+Number(l.quantidade||0),0);
+    const baixos = produtosCache.filter(p=>totalProduto(p.id)<=Number(p.estoqueMinimo||0)).length;
+    const vencendo = lotesCache.filter(l=>{
+      const d=diasAte(l.validade);
+      return Number(l.quantidade||0)>0 && d>=0 && d<=90;
+    }).length;
+
+    $("statProdutos").textContent = produtosCache.length;
+    $("statQuantidade").textContent = totalQtd;
+    $("statBaixo").textContent = baixos;
+    $("statVencendo").textContent = vencendo;
+
+    const alertas = lotesCache
+      .filter(l=>{
+        const p=produtosCache.find(x=>x.id===l.produtoId);
+        const qtd=Number(l.quantidade||0);
+        const venc=diasAte(l.validade)<=90;
+        const baixo=p ? totalProduto(p.id)<=Number(p.estoqueMinimo||0) : false;
+        return qtd>0 && (venc||baixo);
+      })
+      .sort((a,b)=>(a.validade||"9999").localeCompare(b.validade||"9999"));
+
+    $("dashboardAlertas").innerHTML = alertas.length ? alertas.map(l=>{
+      const p=produtosCache.find(x=>x.id===l.produtoId);
+      const d=diasAte(l.validade);
+      let badge='<span class="badge ok">Normal</span>';
+      if(d<0) badge='<span class="badge danger">Vencido</span>';
+      else if(d<=30) badge='<span class="badge danger">Vence em até 30 dias</span>';
+      else if(d<=90) badge='<span class="badge warning">Vence em até 90 dias</span>';
+      else if(p && totalProduto(p.id)<=Number(p.estoqueMinimo||0))
+        badge='<span class="badge warning">Estoque baixo</span>';
+
+      return `<tr>
+        <td>${esc(p?.nome||"Produto não encontrado")}</td>
+        <td>${esc(l.lote||"-")}</td>
+        <td>${formatDateBR(l.validade)}</td>
+        <td>${Number(l.quantidade||0)}</td>
+        <td>${badge}</td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="5">Nenhum alerta no momento.</td></tr>`;
+  }
+
+  $("refreshDashboard").addEventListener("click",carregarTudo);
+
+  $("btnNovoProduto").addEventListener("click",()=>{
+    if(!podeOperar()) return;
+    $("produtoForm").reset();
+    $("produtoId").value="";
+    $("produtoMinimo").value="0";
+    $("produtoFormTitulo").textContent="Cadastrar produto";
+    $("produtoFormPanel").classList.remove("hidden");
+  });
+
+  $("cancelProduto").addEventListener("click",()=>{
+    $("produtoFormPanel").classList.add("hidden");
+  });
+
+  $("produtoForm").addEventListener("submit",async(e)=>{
+    e.preventDefault();
+    if(!podeOperar()) return;
+
+    const id=$("produtoId").value;
+    const dados={
+      nome:$("produtoNome").value.trim(),
+      apresentacao:$("produtoApresentacao").value.trim(),
+      categoria:$("produtoCategoria").value.trim(),
+      unidade:$("produtoUnidade").value.trim(),
+      estoqueMinimo:Number($("produtoMinimo").value||0),
+      localizacao:$("produtoLocalizacao").value.trim(),
+      atualizadoEm:serverTimestamp(),
+      atualizadoPor:usuarioAtual.uid
+    };
+
+    try{
+      if(id){
+        await updateDoc(doc(db,"produtos",id),dados);
+      }else{
+        await addDoc(collection(db,"produtos"),{
+          ...dados,
+          criadoEm:serverTimestamp(),
+          criadoPor:usuarioAtual.uid
+        });
+      }
+      $("produtoFormPanel").classList.add("hidden");
+      await carregarProdutos();
+      preencherSelectProdutos();
+      renderEstoque();
+      renderDashboard();
+    }catch(err){
+      console.error(err);
+      alert("Erro ao salvar produto.");
+    }
+  });
+
+  window.editarProduto = (id)=>{
+    if(!podeOperar()) return;
+    const p=produtosCache.find(x=>x.id===id);
+    if(!p) return;
+    $("produtoId").value=p.id;
+    $("produtoNome").value=p.nome||"";
+    $("produtoApresentacao").value=p.apresentacao||"";
+    $("produtoCategoria").value=p.categoria||"";
+    $("produtoUnidade").value=p.unidade||"";
+    $("produtoMinimo").value=Number(p.estoqueMinimo||0);
+    $("produtoLocalizacao").value=p.localizacao||"";
+    $("produtoFormTitulo").textContent="Editar produto";
+    $("produtoFormPanel").classList.remove("hidden");
+    window.scrollTo({top:0,behavior:"smooth"});
+  };
+
+  window.excluirProduto = async(id)=>{
+    if(!isGestor()) return;
+    if(lotesCache.some(l=>l.produtoId===id && Number(l.quantidade||0)>0)){
+      alert("Não é possível excluir um produto que ainda possui estoque.");
+      return;
+    }
+    if(!confirm("Excluir este produto?")) return;
+    try{
+      await deleteDoc(doc(db,"produtos",id));
+      await carregarProdutos();
+      renderEstoque();
+      renderDashboard();
+    }catch(err){
+      console.error(err);
+      alert("Erro ao excluir produto.");
+    }
+  };
+
+  function renderEstoque(){
+    const busca=$("searchProduto").value.trim().toLowerCase();
+    const lista=produtosCache.filter(p=>
+      [p.nome,p.apresentacao,p.categoria,p.localizacao].join(" ").toLowerCase().includes(busca)
+    );
+
+    $("estoqueBody").innerHTML=lista.length ? lista.map(p=>{
+      const total=totalProduto(p.id);
+      const baixo=total<=Number(p.estoqueMinimo||0);
+      let acoes="-";
+      if(podeOperar()){
+        acoes=`<button class="btn btn-secondary" onclick="editarProduto('${p.id}')">Editar</button>`;
+        if(isGestor()){
+          acoes+=` <button class="btn btn-danger" onclick="excluirProduto('${p.id}')">Excluir</button>`;
+        }
+      }
+      return `<tr>
+        <td>${esc(p.nome||"-")}</td>
+        <td>${esc(p.apresentacao||"-")}</td>
+        <td>${esc(p.unidade||"-")}</td>
+        <td>${total}</td>
+        <td>${Number(p.estoqueMinimo||0)}</td>
+        <td>${baixo?'<span class="badge warning">Baixo</span>':'<span class="badge ok">Normal</span>'}</td>
+        <td>${acoes}</td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="7">Nenhum produto encontrado.</td></tr>`;
+  }
+
+  $("searchProduto").addEventListener("input",renderEstoque);
+
+  function preencherSelectProdutos(){
+    const opts=`<option value="">Selecione...</option>`+produtosCache.map(p=>
+      `<option value="${p.id}">${esc(p.nome)}${p.apresentacao?` - ${esc(p.apresentacao)}`:""}</option>`
+    ).join("");
+    $("entradaProduto").innerHTML=opts;
+    $("baixaProduto").innerHTML=opts;
+    preencherLotesBaixa();
+  }
+
+  $("entradaForm").addEventListener("submit",async(e)=>{
+    e.preventDefault();
+    if(!podeOperar()) return;
+
+    const produtoId=$("entradaProduto").value;
+    const loteNumero=$("entradaLote").value.trim();
+    const validade=$("entradaValidade").value;
+    const quantidade=Number($("entradaQuantidade").value);
+
+    if(!produtoId || !loteNumero || !validade || quantidade<=0) return;
+
+    try{
+      const existente=lotesCache.find(l=>
+        l.produtoId===produtoId &&
+        String(l.lote||"").trim().toLowerCase()===loteNumero.toLowerCase() &&
+        l.validade===validade
+      );
+
+      let loteId;
+
+      if(existente){
+        const loteRef=doc(db,"lotes",existente.id);
+        await runTransaction(db,async(tx)=>{
+          const snap=await tx.get(loteRef);
+          if(!snap.exists()) throw new Error("Lote não encontrado.");
+          const atual=Number(snap.data().quantidade||0);
+          tx.update(loteRef,{
+            quantidade:atual+quantidade,
+            atualizadoEm:serverTimestamp(),
+            atualizadoPor:usuarioAtual.uid
+          });
+        });
+        loteId=existente.id;
+      }else{
+        const ref=await addDoc(collection(db,"lotes"),{
+          produtoId,
+          lote:loteNumero,
+          validade,
+          quantidade,
+          criadoEm:serverTimestamp(),
+          criadoPor:usuarioAtual.uid
+        });
+        loteId=ref.id;
+      }
+
+      const produto=produtosCache.find(p=>p.id===produtoId);
+
+      await addDoc(collection(db,"movimentacoes"),{
+        tipo:"entrada",
+        produtoId,
+        produtoNome:produto?.nome||"",
+        loteId,
+        lote:loteNumero,
+        quantidade,
+        origem:$("entradaOrigem").value.trim(),
+        observacao:$("entradaObs").value.trim(),
+        responsavelUid:usuarioAtual.uid,
+        responsavelNome:usuarioAtual.nome||usuarioAtual.email,
+        criadoEm:serverTimestamp()
+      });
+
+      $("entradaForm").reset();
+      showMsg($("entradaMsg"),"Entrada registrada com sucesso.","ok");
+      await carregarLotes();
+      await carregarMovimentacoes();
+      renderDashboard();
+      renderEstoque();
+      renderValidades();
+    }catch(err){
+      console.error(err);
+      showMsg($("entradaMsg"),"Erro ao registrar entrada.");
+    }
+  });
+
+  $("baixaProduto").addEventListener("change",preencherLotesBaixa);
+
+  function preencherLotesBaixa(){
+    const produtoId=$("baixaProduto").value;
+    const lotes=lotesCache
+      .filter(l=>l.produtoId===produtoId && Number(l.quantidade||0)>0)
+      .sort((a,b)=>(a.validade||"9999").localeCompare(b.validade||"9999"));
+
+    $("baixaLote").innerHTML=`<option value="">Selecione...</option>`+lotes.map((l,i)=>
+      `<option value="${l.id}">${i===0?"FEFO → ":""}${esc(l.lote)} | ${formatDateBR(l.validade)} | qtd. ${Number(l.quantidade||0)}</option>`
+    ).join("");
+  }
+
+  $("baixaForm").addEventListener("submit",async(e)=>{
+    e.preventDefault();
+    if(!podeOperar()) return;
+
+    const produtoId=$("baixaProduto").value;
+    const loteId=$("baixaLote").value;
+    const quantidade=Number($("baixaQuantidade").value);
+
+    if(!produtoId || !loteId || quantidade<=0) return;
+
+    try{
+      const loteRef=doc(db,"lotes",loteId);
+      let loteDados;
+
+      await runTransaction(db,async(tx)=>{
+        const snap=await tx.get(loteRef);
+        if(!snap.exists()) throw new Error("Lote não encontrado.");
+        loteDados=snap.data();
+        const atual=Number(loteDados.quantidade||0);
+        if(quantidade>atual) throw new Error(`Estoque insuficiente. Disponível: ${atual}.`);
+        tx.update(loteRef,{
+          quantidade:atual-quantidade,
+          atualizadoEm:serverTimestamp(),
+          atualizadoPor:usuarioAtual.uid
+        });
+      });
+
+      const produto=produtosCache.find(p=>p.id===produtoId);
+
+      await addDoc(collection(db,"movimentacoes"),{
+        tipo:"saida",
+        produtoId,
+        produtoNome:produto?.nome||"",
+        loteId,
+        lote:loteDados?.lote||"",
+        quantidade,
+        destino:$("baixaDestino").value.trim(),
+        motivo:$("baixaMotivo").value,
+        observacao:$("baixaObs").value.trim(),
+        responsavelUid:usuarioAtual.uid,
+        responsavelNome:usuarioAtual.nome||usuarioAtual.email,
+        criadoEm:serverTimestamp()
+      });
+
+      $("baixaForm").reset();
+      preencherLotesBaixa();
+      showMsg($("baixaMsg"),"Baixa registrada com sucesso.","ok");
+      await carregarLotes();
+      await carregarMovimentacoes();
+      renderDashboard();
+      renderEstoque();
+      renderMovimentacoes();
+      renderValidades();
+    }catch(err){
+      console.error(err);
+      showMsg($("baixaMsg"),err.message || "Erro ao registrar baixa.");
+    }
+  });
+
+  function dataMov(m){
+    return m.criadoEm?.toDate ? m.criadoEm.toDate().toLocaleString("pt-BR") : "-";
+  }
+
+  function renderMovimentacoes(){
+    const tipo=$("movTipoFiltro").value;
+    const busca=$("movBusca").value.trim().toLowerCase();
+
+    const lista=movimentosCache.filter(m=>{
+      const okTipo=!tipo || m.tipo===tipo;
+      const texto=[m.produtoNome,m.lote,m.responsavelNome,m.destino,m.origem,m.motivo].join(" ").toLowerCase();
+      return okTipo && texto.includes(busca);
+    });
+
+    $("movBody").innerHTML=lista.length ? lista.map(m=>`
+      <tr>
+        <td>${dataMov(m)}</td>
+        <td>${m.tipo==="entrada"?'<span class="badge ok">Entrada</span>':'<span class="badge info">Saída</span>'}</td>
+        <td>${esc(m.produtoNome||"-")}</td>
+        <td>${esc(m.lote||"-")}</td>
+        <td>${Number(m.quantidade||0)}</td>
+        <td>${esc(m.destino||m.origem||"-")}</td>
+        <td>${esc(m.responsavelNome||"-")}</td>
+      </tr>
+    `).join("") : `<tr><td colspan="7">Nenhuma movimentação encontrada.</td></tr>`;
+  }
+
+  $("movTipoFiltro").addEventListener("change",renderMovimentacoes);
+  $("movBusca").addEventListener("input",renderMovimentacoes);
+
+  function renderValidades(){
+    const lista=[...lotesCache].sort((a,b)=>(a.validade||"9999").localeCompare(b.validade||"9999"));
+
+    $("validadeBody").innerHTML=lista.length ? lista.map(l=>{
+      const p=produtosCache.find(x=>x.id===l.produtoId);
+      const d=diasAte(l.validade);
+      let status='<span class="badge ok">Regular</span>';
+      if(d<0) status='<span class="badge danger">Vencido</span>';
+      else if(d<=30) status='<span class="badge danger">Até 30 dias</span>';
+      else if(d<=90) status='<span class="badge warning">Até 90 dias</span>';
+
+      return `<tr>
+        <td>${esc(p?.nome||"-")}</td>
+        <td>${esc(l.lote||"-")}</td>
+        <td>${formatDateBR(l.validade)}</td>
+        <td>${Number(l.quantidade||0)}</td>
+        <td>${status}</td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="5">Nenhum lote cadastrado.</td></tr>`;
+  }
+
+  async function carregarUsuarios(){
+    if(!isGestor()) return;
+    try{
+      const snap=await getDocs(collection(db,"usuarios"));
+      const users=snap.docs.map(d=>({id:d.id,...d.data()}));
+      $("usuariosBody").innerHTML=users.length ? users.map(u=>`
+        <tr>
+          <td>${esc(u.nome||"-")}</td>
+          <td>${esc(u.email||"-")}</td>
+          <td>${esc(perfilLabel(u.perfil))}</td>
+          <td>${u.ativo===false?'<span class="badge danger">Não</span>':'<span class="badge ok">Sim</span>'}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="4">Nenhum usuário cadastrado.</td></tr>`;
+    }catch(err){
+      console.error(err);
+      $("usuariosBody").innerHTML=`<tr><td colspan="4">Erro ao carregar usuários.</td></tr>`;
+    }
+  }
+</script>
+</body>
+</html>
