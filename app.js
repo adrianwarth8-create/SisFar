@@ -1,10 +1,27 @@
-import { auth, db } from "./firebase.js";
+// =========================================================
+// SISFAR V2
+// APP.JS
+// Controle de Estoque de Farmácia
+// Versão com leitor de código de barras pela câmera
+// =========================================================
+
+
+// =========================================================
+// FIREBASE
+// =========================================================
+
+import {
+  auth,
+  db
+} from "./firebase.js";
+
 
 import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
 
 import {
   collection,
@@ -20,40 +37,104 @@ import {
   runTransaction
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
+
+// =========================================================
+// VARIÁVEIS
+// =========================================================
+
 let usuarioAtual = null;
+
 let produtosCache = [];
+
 let lotesCache = [];
+
 let movimentosCache = [];
 
-const $ = (id) => document.getElementById(id);
 
-const loginScreen = $("loginScreen");
-const appScreen = $("appScreen");
+// =========================================================
+// SCANNER
+// =========================================================
+
+let scannerDestino = null;
+
+let scannerControles = null;
+
+let scannerAtivo = false;
+
+let ultimoCodigoLido = "";
+
+let ultimoCodigoTempo = 0;
 
 
-function showMsg(el, texto, tipo = "error") {
+// =========================================================
+// ATALHO PARA ELEMENTOS
+// =========================================================
 
-  el.textContent = texto;
+const $ = (id) =>
+  document.getElementById(id);
 
-  el.className =
+
+const loginScreen =
+  $("loginScreen");
+
+
+const appScreen =
+  $("appScreen");
+
+
+// =========================================================
+// MENSAGENS
+// =========================================================
+
+function showMsg(
+  elemento,
+  texto,
+  tipo = "error"
+) {
+
+  if (!elemento) {
+    return;
+  }
+
+
+  elemento.textContent =
+    texto;
+
+
+  elemento.className =
     `message ${tipo}`;
 
 }
 
 
-function hideMsg(el) {
+function hideMsg(
+  elemento
+) {
 
-  el.textContent = "";
+  if (!elemento) {
+    return;
+  }
 
-  el.className =
+
+  elemento.textContent =
+    "";
+
+
+  elemento.className =
     "message hidden";
 
 }
 
 
-function esc(v = "") {
+// =========================================================
+// SEGURANÇA DE TEXTO
+// =========================================================
 
-  return String(v)
+function esc(
+  valor = ""
+) {
+
+  return String(valor)
 
     .replaceAll(
       "&",
@@ -83,9 +164,74 @@ function esc(v = "") {
 }
 
 
-function formatDateBR(value) {
+// =========================================================
+// CÓDIGO DE BARRAS
+// =========================================================
 
-  if (!value) {
+function normalizarCodigoBarras(
+  valor
+) {
+
+  return String(
+    valor
+    ||
+    ""
+  )
+    .trim()
+    .replace(
+      /\s+/g,
+      ""
+    );
+
+}
+
+
+function encontrarProdutoPorCodigo(
+  codigo
+) {
+
+  const codigoNormalizado =
+    normalizarCodigoBarras(
+      codigo
+    );
+
+
+  if (
+    !codigoNormalizado
+  ) {
+
+    return null;
+
+  }
+
+
+  return produtosCache.find(
+    produto =>
+
+      normalizarCodigoBarras(
+        produto.codigoBarras
+      )
+      ===
+      codigoNormalizado
+
+  )
+  ||
+  null;
+
+}
+
+
+// =========================================================
+// DATAS
+// =========================================================
+
+function formatDateBR(
+  value
+) {
+
+  if (
+    !value
+  ) {
 
     return "-";
 
@@ -98,24 +244,31 @@ function formatDateBR(value) {
     "string"
   ) {
 
-    const [
-      y,
-      m,
-      d
-    ] = value.split("-");
+    const partes =
+      value.split("-");
 
 
-    return (
-      y
-      &&
-      m
-      &&
-      d
-    )
+    if (
+      partes.length
+      ===
+      3
+    ) {
 
-      ? `${d}/${m}/${y}`
+      const [
+        ano,
+        mes,
+        dia
+      ] = partes;
 
-      : value;
+
+      return (
+        `${dia}/${mes}/${ano}`
+      );
+
+    }
+
+
+    return value;
 
   }
 
@@ -138,9 +291,13 @@ function formatDateBR(value) {
 }
 
 
-function diasAte(dataISO) {
+function diasAte(
+  dataISO
+) {
 
-  if (!dataISO) {
+  if (
+    !dataISO
+  ) {
 
     return 999999;
 
@@ -190,7 +347,13 @@ function diasAte(dataISO) {
 }
 
 
-function perfilLabel(p) {
+// =========================================================
+// PERFIS
+// =========================================================
+
+function perfilLabel(
+  perfil
+) {
 
   return ({
 
@@ -203,11 +366,15 @@ function perfilLabel(p) {
     consulta:
       "Consulta"
 
-  })[p]
+  })[perfil]
 
   ||
 
-  p;
+  perfil
+
+  ||
+
+  "-";
 
 }
 
@@ -238,6 +405,10 @@ function isGestor() {
 }
 
 
+// =========================================================
+// PERMISSÕES
+// =========================================================
+
 function aplicarPermissoes() {
 
   document
@@ -245,9 +416,9 @@ function aplicarPermissoes() {
       ".gestor-only"
     )
     .forEach(
-      el => {
+      elemento => {
 
-        el.classList.toggle(
+        elemento.classList.toggle(
 
           "hidden",
 
@@ -264,9 +435,9 @@ function aplicarPermissoes() {
       ".perm-operacao"
     )
     .forEach(
-      el => {
+      elemento => {
 
-        el.classList.toggle(
+        elemento.classList.toggle(
 
           "hidden",
 
@@ -280,12 +451,16 @@ function aplicarPermissoes() {
 }
 
 
-$("loginForm")
-  .addEventListener(
-    "submit",
-    async (e) => {
+// =========================================================
+// LOGIN
+// =========================================================
 
-      e.preventDefault();
+$("loginForm")
+  ?.addEventListener(
+    "submit",
+    async (event) => {
+
+      event.preventDefault();
 
 
       hideMsg(
@@ -318,10 +493,11 @@ $("loginForm")
 
       }
 
-      catch (err) {
+      catch (erro) {
 
         console.error(
-          err
+          "Erro no login:",
+          erro
         );
 
 
@@ -329,7 +505,7 @@ $("loginForm")
 
           $("loginMsg"),
 
-          "Não foi possível entrar. Verifique e-mail, senha e se o acesso por E-mail/Senha está ativado."
+          "Não foi possível entrar. Verifique o e-mail e a senha."
 
         );
 
@@ -339,10 +515,17 @@ $("loginForm")
   );
 
 
+// =========================================================
+// LOGOUT
+// =========================================================
+
 $("logoutBtn")
-  .addEventListener(
+  ?.addEventListener(
     "click",
     async () => {
+
+      fecharScanner();
+
 
       await signOut(
         auth
@@ -352,27 +535,33 @@ $("logoutBtn")
   );
 
 
+// =========================================================
+// AUTENTICAÇÃO
+// =========================================================
+
 onAuthStateChanged(
 
   auth,
 
   async (user) => {
 
-    if (!user) {
+    if (
+      !user
+    ) {
 
       usuarioAtual =
         null;
 
 
       loginScreen
-        .classList
+        ?.classList
         .remove(
           "hidden"
         );
 
 
       appScreen
-        .classList
+        ?.classList
         .add(
           "hidden"
         );
@@ -414,7 +603,7 @@ onAuthStateChanged(
 
           $("loginMsg"),
 
-          `Usuário autenticado, mas não existe cadastro de perfil em usuarios/${user.uid}. Crie esse documento no Firestore.`
+          "Usuário autenticado, mas não existe perfil cadastrado na coleção usuarios."
 
         );
 
@@ -466,32 +655,44 @@ onAuthStateChanged(
       };
 
 
-      $("userName")
-        .textContent =
-        usuarioAtual.nome
-        ||
-        user.email;
+      if (
+        $("userName")
+      ) {
+
+        $("userName")
+          .textContent =
+          usuarioAtual.nome
+          ||
+          user.email;
+
+      }
 
 
-      $("userProfile")
-        .textContent =
-        perfilLabel(
-          usuarioAtual.perfil
-        );
+      if (
+        $("userProfile")
+      ) {
+
+        $("userProfile")
+          .textContent =
+          perfilLabel(
+            usuarioAtual.perfil
+          );
+
+      }
 
 
       aplicarPermissoes();
 
 
       loginScreen
-        .classList
+        ?.classList
         .add(
           "hidden"
         );
 
 
       appScreen
-        .classList
+        ?.classList
         .remove(
           "hidden"
         );
@@ -506,10 +707,11 @@ onAuthStateChanged(
 
     }
 
-    catch (err) {
+    catch (erro) {
 
       console.error(
-        err
+        "Erro ao carregar perfil:",
+        erro
       );
 
 
@@ -533,19 +735,26 @@ onAuthStateChanged(
 );
 
 
+// =========================================================
+// MENU
+// =========================================================
+
 document
   .querySelectorAll(
     ".nav-btn[data-page]"
   )
   .forEach(
-    btn => {
+    botao => {
 
-      btn.addEventListener(
+      botao.addEventListener(
         "click",
         () => {
 
+          fecharScanner();
+
+
           abrirPagina(
-            btn.dataset.page
+            botao.dataset.page
           );
 
         }
@@ -555,17 +764,22 @@ document
   );
 
 
-function abrirPagina(page) {
+function abrirPagina(
+  page
+) {
 
   document
     .querySelectorAll(
       ".page"
     )
     .forEach(
-      p =>
-        p.classList.add(
+      pagina => {
+
+        pagina.classList.add(
           "hidden"
-        )
+        );
+
+      }
     );
 
 
@@ -575,13 +789,13 @@ function abrirPagina(page) {
     );
 
 
-  if (destino) {
-
+  if (
     destino
-      .classList
-      .remove(
-        "hidden"
-      );
+  ) {
+
+    destino.classList.remove(
+      "hidden"
+    );
 
   }
 
@@ -591,13 +805,13 @@ function abrirPagina(page) {
       ".nav-btn[data-page]"
     )
     .forEach(
-      b => {
+      botao => {
 
-        b.classList.toggle(
+        botao.classList.toggle(
 
           "active",
 
-          b.dataset.page
+          botao.dataset.page
           ===
           page
 
@@ -607,7 +821,7 @@ function abrirPagina(page) {
     );
 
 
-  const labels = {
+  const titulos = {
 
     dashboard:
       "Dashboard",
@@ -633,11 +847,17 @@ function abrirPagina(page) {
   };
 
 
-  $("pageHeader")
-    .textContent =
-    labels[page]
-    ||
-    "SISFAR V2";
+  if (
+    $("pageHeader")
+  ) {
+
+    $("pageHeader")
+      .textContent =
+      titulos[page]
+      ||
+      "SISFAR V2";
+
+  }
 
 
   if (
@@ -721,6 +941,10 @@ function abrirPagina(page) {
 }
 
 
+// =========================================================
+// CARREGAR DADOS
+// =========================================================
+
 async function carregarTudo() {
 
   await Promise.all([
@@ -747,6 +971,10 @@ async function carregarTudo() {
 }
 
 
+// =========================================================
+// PRODUTOS
+// =========================================================
+
 async function carregarProdutos() {
 
   const snap =
@@ -764,12 +992,12 @@ async function carregarProdutos() {
     snap.docs
 
       .map(
-        d => ({
+        documento => ({
 
           id:
-            d.id,
+            documento.id,
 
-          ...d.data()
+          ...documento.data()
 
         })
       )
@@ -791,10 +1019,15 @@ async function carregarProdutos() {
               "pt-BR"
 
             )
+
       );
 
 }
 
+
+// =========================================================
+// LOTES
+// =========================================================
 
 async function carregarLotes() {
 
@@ -811,12 +1044,12 @@ async function carregarLotes() {
 
   lotesCache =
     snap.docs.map(
-      d => ({
+      documento => ({
 
         id:
-          d.id,
+          documento.id,
 
-        ...d.data()
+        ...documento.data()
 
       })
     );
@@ -824,11 +1057,15 @@ async function carregarLotes() {
 }
 
 
+// =========================================================
+// MOVIMENTAÇÕES
+// =========================================================
+
 async function carregarMovimentacoes() {
 
   try {
 
-    const q =
+    const consulta =
       query(
 
         collection(
@@ -846,32 +1083,29 @@ async function carregarMovimentacoes() {
 
     const snap =
       await getDocs(
-        q
+        consulta
       );
 
 
     movimentosCache =
       snap.docs.map(
-        d => ({
+        documento => ({
 
           id:
-            d.id,
+            documento.id,
 
-          ...d.data()
+          ...documento.data()
 
         })
       );
 
   }
 
-  catch (err) {
+  catch (erro) {
 
     console.warn(
-
-      "Fallback sem orderBy:",
-
-      err
-
+      "Carregando movimentações sem orderBy:",
+      erro
     );
 
 
@@ -888,12 +1122,12 @@ async function carregarMovimentacoes() {
 
     movimentosCache =
       snap.docs.map(
-        d => ({
+        documento => ({
 
           id:
-            d.id,
+            documento.id,
 
-          ...d.data()
+          ...documento.data()
 
         })
       );
@@ -902,22 +1136,22 @@ async function carregarMovimentacoes() {
     movimentosCache.sort(
       (a, b) => {
 
-        const ad =
+        const dataA =
           a.criadoEm?.seconds
           ||
           0;
 
 
-        const bd =
+        const dataB =
           b.criadoEm?.seconds
           ||
           0;
 
 
         return (
-          bd
+          dataB
           -
-          ad
+          dataA
         );
 
       }
@@ -928,27 +1162,33 @@ async function carregarMovimentacoes() {
 }
 
 
-function totalProduto(produtoId) {
+// =========================================================
+// TOTAL DO PRODUTO
+// =========================================================
+
+function totalProduto(
+  produtoId
+) {
 
   return lotesCache
 
     .filter(
-      l =>
-        l.produtoId
+      lote =>
+        lote.produtoId
         ===
         produtoId
     )
 
     .reduce(
       (
-        s,
-        l
+        total,
+        lote
       ) =>
 
-        s
+        total
         +
         Number(
-          l.quantidade
+          lote.quantidade
           ||
           0
         ),
@@ -959,19 +1199,23 @@ function totalProduto(produtoId) {
 }
 
 
+// =========================================================
+// DASHBOARD
+// =========================================================
+
 function renderDashboard() {
 
-  const totalQtd =
+  const totalQuantidade =
     lotesCache.reduce(
       (
-        s,
-        l
+        total,
+        lote
       ) =>
 
-        s
+        total
         +
         Number(
-          l.quantidade
+          lote.quantidade
           ||
           0
         ),
@@ -982,37 +1226,38 @@ function renderDashboard() {
 
   const baixos =
     produtosCache.filter(
-      p =>
+      produto =>
 
         totalProduto(
-          p.id
+          produto.id
         )
 
         <=
 
         Number(
-          p.estoqueMinimo
+          produto.estoqueMinimo
           ||
           0
         )
+
     )
     .length;
 
 
   const vencendo =
     lotesCache.filter(
-      l => {
+      lote => {
 
-        const d =
+        const dias =
           diasAte(
-            l.validade
+            lote.validade
           );
 
 
         return (
 
           Number(
-            l.quantidade
+            lote.quantidade
             ||
             0
           )
@@ -1021,13 +1266,13 @@ function renderDashboard() {
 
           &&
 
-          d
+          dias
           >=
           0
 
           &&
 
-          d
+          dias
           <=
           90
 
@@ -1038,85 +1283,111 @@ function renderDashboard() {
     .length;
 
 
-  $("statProdutos")
-    .textContent =
-    produtosCache.length;
+  if (
+    $("statProdutos")
+  ) {
+
+    $("statProdutos")
+      .textContent =
+      produtosCache.length;
+
+  }
 
 
-  $("statQuantidade")
-    .textContent =
-    totalQtd;
+  if (
+    $("statQuantidade")
+  ) {
+
+    $("statQuantidade")
+      .textContent =
+      totalQuantidade;
+
+  }
 
 
-  $("statBaixo")
-    .textContent =
-    baixos;
+  if (
+    $("statBaixo")
+  ) {
+
+    $("statBaixo")
+      .textContent =
+      baixos;
+
+  }
 
 
-  $("statVencendo")
-    .textContent =
-    vencendo;
+  if (
+    $("statVencendo")
+  ) {
+
+    $("statVencendo")
+      .textContent =
+      vencendo;
+
+  }
 
 
   const alertas =
     lotesCache
 
       .filter(
-        l => {
+        lote => {
 
-          const p =
+          const produto =
             produtosCache.find(
-              x =>
-                x.id
+              item =>
+                item.id
                 ===
-                l.produtoId
+                lote.produtoId
             );
 
 
-          const qtd =
+          const quantidade =
             Number(
-              l.quantidade
+              lote.quantidade
               ||
               0
             );
 
 
-          const venc =
+          const vencimento =
             diasAte(
-              l.validade
+              lote.validade
             )
             <=
             90;
 
 
           const baixo =
-            p
+            produto
 
               ?
+
               totalProduto(
-                p.id
+                produto.id
               )
               <=
               Number(
-                p.estoqueMinimo
+                produto.estoqueMinimo
                 ||
                 0
               )
 
               :
+
               false;
 
 
           return (
 
-            qtd
+            quantidade
             >
             0
 
             &&
 
             (
-              venc
+              vencimento
               ||
               baixo
             )
@@ -1141,140 +1412,25 @@ function renderDashboard() {
               "9999"
 
             )
+
       );
 
 
-  $("dashboardAlertas")
-    .innerHTML =
+  if (
+    !$("dashboardAlertas")
+  ) {
 
-    alertas.length
+    return;
 
-      ?
-
-      alertas.map(
-        l => {
-
-          const p =
-            produtosCache.find(
-              x =>
-                x.id
-                ===
-                l.produtoId
-            );
+  }
 
 
-          const d =
-            diasAte(
-              l.validade
-            );
+  if (
+    !alertas.length
+  ) {
 
-
-          let badge =
-            '<span class="badge ok">Normal</span>';
-
-
-          if (
-            d
-            <
-            0
-          ) {
-
-            badge =
-              '<span class="badge danger">Vencido</span>';
-
-          }
-
-          else if (
-            d
-            <=
-            30
-          ) {
-
-            badge =
-              '<span class="badge danger">Vence em até 30 dias</span>';
-
-          }
-
-          else if (
-            d
-            <=
-            90
-          ) {
-
-            badge =
-              '<span class="badge warning">Vence em até 90 dias</span>';
-
-          }
-
-          else if (
-            p
-            &&
-            totalProduto(
-              p.id
-            )
-            <=
-            Number(
-              p.estoqueMinimo
-              ||
-              0
-            )
-          ) {
-
-            badge =
-              '<span class="badge warning">Estoque baixo</span>';
-
-          }
-
-
-          return `
-
-            <tr>
-
-              <td>
-                ${esc(
-                  p?.nome
-                  ||
-                  "Produto não encontrado"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  l.lote
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${formatDateBR(
-                  l.validade
-                )}
-              </td>
-
-              <td>
-                ${Number(
-                  l.quantidade
-                  ||
-                  0
-                )}
-              </td>
-
-              <td>
-                ${badge}
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-      .join("")
-
-      :
-
-      `
+    $("dashboardAlertas")
+      .innerHTML = `
 
         <tr>
 
@@ -1286,18 +1442,155 @@ function renderDashboard() {
 
       `;
 
+
+    return;
+
+  }
+
+
+  $("dashboardAlertas")
+    .innerHTML =
+    alertas.map(
+      lote => {
+
+        const produto =
+          produtosCache.find(
+            item =>
+              item.id
+              ===
+              lote.produtoId
+          );
+
+
+        const dias =
+          diasAte(
+            lote.validade
+          );
+
+
+        let badge =
+          '<span class="badge ok">Normal</span>';
+
+
+        if (
+          dias
+          <
+          0
+        ) {
+
+          badge =
+            '<span class="badge danger">Vencido</span>';
+
+        }
+
+        else if (
+          dias
+          <=
+          30
+        ) {
+
+          badge =
+            '<span class="badge danger">Vence em até 30 dias</span>';
+
+        }
+
+        else if (
+          dias
+          <=
+          90
+        ) {
+
+          badge =
+            '<span class="badge warning">Vence em até 90 dias</span>';
+
+        }
+
+        else if (
+          produto
+          &&
+          totalProduto(
+            produto.id
+          )
+          <=
+          Number(
+            produto.estoqueMinimo
+            ||
+            0
+          )
+        ) {
+
+          badge =
+            '<span class="badge warning">Estoque baixo</span>';
+
+        }
+
+
+        return `
+
+          <tr>
+
+            <td>
+              ${esc(
+                produto?.nome
+                ||
+                "Produto não encontrado"
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                lote.lote
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${formatDateBR(
+                lote.validade
+              )}
+            </td>
+
+            <td>
+              ${Number(
+                lote.quantidade
+                ||
+                0
+              )}
+            </td>
+
+            <td>
+              ${badge}
+            </td>
+
+          </tr>
+
+        `;
+
+      }
+    )
+    .join("");
+
 }
 
 
+// =========================================================
+// ATUALIZAR DASHBOARD
+// =========================================================
+
 $("refreshDashboard")
-  .addEventListener(
+  ?.addEventListener(
     "click",
     carregarTudo
   );
 
 
+// =========================================================
+// NOVO PRODUTO
+// =========================================================
+
 $("btnNovoProduto")
-  .addEventListener(
+  ?.addEventListener(
     "click",
     () => {
 
@@ -1339,8 +1632,12 @@ $("btnNovoProduto")
   );
 
 
+// =========================================================
+// CANCELAR PRODUTO
+// =========================================================
+
 $("cancelProduto")
-  .addEventListener(
+  ?.addEventListener(
     "click",
     () => {
 
@@ -1354,12 +1651,16 @@ $("cancelProduto")
   );
 
 
-$("produtoForm")
-  .addEventListener(
-    "submit",
-    async (e) => {
+// =========================================================
+// SALVAR PRODUTO
+// =========================================================
 
-      e.preventDefault();
+$("produtoForm")
+  ?.addEventListener(
+    "submit",
+    async (event) => {
+
+      event.preventDefault();
 
 
       if (
@@ -1376,12 +1677,61 @@ $("produtoForm")
           .value;
 
 
+      const codigoBarras =
+        normalizarCodigoBarras(
+          $("produtoCodigoBarras")
+            .value
+        );
+
+
+      if (
+        codigoBarras
+      ) {
+
+        const produtoDuplicado =
+          produtosCache.find(
+            produto =>
+
+              normalizarCodigoBarras(
+                produto.codigoBarras
+              )
+              ===
+              codigoBarras
+
+              &&
+
+              produto.id
+              !==
+              id
+          );
+
+
+        if (
+          produtoDuplicado
+        ) {
+
+          alert(
+
+            `Este código de barras já está cadastrado para: ${produtoDuplicado.nome}`
+
+          );
+
+
+          return;
+
+        }
+
+      }
+
+
       const dados = {
 
         nome:
           $("produtoNome")
             .value
             .trim(),
+
+        codigoBarras,
 
         apresentacao:
           $("produtoApresentacao")
@@ -1484,10 +1834,10 @@ $("produtoForm")
 
       }
 
-      catch (err) {
+      catch (erro) {
 
         console.error(
-          err
+          erro
         );
 
 
@@ -1501,6 +1851,10 @@ $("produtoForm")
   );
 
 
+// =========================================================
+// EDITAR PRODUTO
+// =========================================================
+
 window.editarProduto =
   (id) => {
 
@@ -1513,16 +1867,18 @@ window.editarProduto =
     }
 
 
-    const p =
+    const produto =
       produtosCache.find(
-        x =>
-          x.id
+        item =>
+          item.id
           ===
           id
       );
 
 
-    if (!p) {
+    if (
+      !produto
+    ) {
 
       return;
 
@@ -1531,33 +1887,40 @@ window.editarProduto =
 
     $("produtoId")
       .value =
-      p.id;
+      produto.id;
 
 
     $("produtoNome")
       .value =
-      p.nome
+      produto.nome
+      ||
+      "";
+
+
+    $("produtoCodigoBarras")
+      .value =
+      produto.codigoBarras
       ||
       "";
 
 
     $("produtoApresentacao")
       .value =
-      p.apresentacao
+      produto.apresentacao
       ||
       "";
 
 
     $("produtoCategoria")
       .value =
-      p.categoria
+      produto.categoria
       ||
       "";
 
 
     $("produtoUnidade")
       .value =
-      p.unidade
+      produto.unidade
       ||
       "";
 
@@ -1565,7 +1928,7 @@ window.editarProduto =
     $("produtoMinimo")
       .value =
       Number(
-        p.estoqueMinimo
+        produto.estoqueMinimo
         ||
         0
       );
@@ -1573,7 +1936,7 @@ window.editarProduto =
 
     $("produtoLocalizacao")
       .value =
-      p.localizacao
+      produto.localizacao
       ||
       "";
 
@@ -1603,6 +1966,10 @@ window.editarProduto =
   };
 
 
+// =========================================================
+// EXCLUIR PRODUTO
+// =========================================================
+
 window.excluirProduto =
   async (id) => {
 
@@ -1615,24 +1982,28 @@ window.excluirProduto =
     }
 
 
-    if (
+    const possuiEstoque =
       lotesCache.some(
-        l =>
+        lote =>
 
-          l.produtoId
+          lote.produtoId
           ===
           id
 
           &&
 
           Number(
-            l.quantidade
+            lote.quantidade
             ||
             0
           )
           >
           0
-      )
+      );
+
+
+    if (
+      possuiEstoque
     ) {
 
       alert(
@@ -1672,16 +2043,18 @@ window.excluirProduto =
       await carregarProdutos();
 
 
+      preencherSelectProdutos();
+
       renderEstoque();
 
       renderDashboard();
 
     }
 
-    catch (err) {
+    catch (erro) {
 
       console.error(
-        err
+        erro
       );
 
 
@@ -1694,177 +2067,69 @@ window.excluirProduto =
   };
 
 
+// =========================================================
+// ESTOQUE
+// =========================================================
+
 function renderEstoque() {
+
+  if (
+    !$("estoqueBody")
+  ) {
+
+    return;
+
+  }
+
 
   const busca =
     $("searchProduto")
-      .value
+      ?.value
       .trim()
-      .toLowerCase();
+      .toLowerCase()
+    ||
+    "";
 
 
   const lista =
     produtosCache.filter(
-      p =>
+      produto => {
 
-        [
+        const texto = [
 
-          p.nome,
+          produto.nome,
 
-          p.apresentacao,
+          produto.codigoBarras,
 
-          p.categoria,
+          produto.apresentacao,
 
-          p.localizacao
+          produto.categoria,
+
+          produto.localizacao
 
         ]
           .join(" ")
-          .toLowerCase()
-          .includes(
-            busca
-          )
+          .toLowerCase();
+
+
+        return texto.includes(
+          busca
+        );
+
+      }
     );
 
 
-  $("estoqueBody")
-    .innerHTML =
+  if (
+    !lista.length
+  ) {
 
-    lista.length
-
-      ?
-
-      lista.map(
-        p => {
-
-          const total =
-            totalProduto(
-              p.id
-            );
-
-
-          const baixo =
-            total
-            <=
-            Number(
-              p.estoqueMinimo
-              ||
-              0
-            );
-
-
-          let acoes =
-            "-";
-
-
-          if (
-            podeOperar()
-          ) {
-
-            acoes = `
-
-              <button
-                class="btn btn-secondary"
-                onclick="editarProduto('${p.id}')"
-              >
-                Editar
-              </button>
-
-            `;
-
-
-            if (
-              isGestor()
-            ) {
-
-              acoes += `
-
-                <button
-                  class="btn btn-danger"
-                  onclick="excluirProduto('${p.id}')"
-                >
-                  Excluir
-                </button>
-
-              `;
-
-            }
-
-          }
-
-
-          return `
-
-            <tr>
-
-              <td>
-                ${esc(
-                  p.nome
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  p.apresentacao
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  p.unidade
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${total}
-              </td>
-
-              <td>
-                ${Number(
-                  p.estoqueMinimo
-                  ||
-                  0
-                )}
-              </td>
-
-              <td>
-
-                ${
-                  baixo
-
-                    ?
-                    '<span class="badge warning">Baixo</span>'
-
-                    :
-                    '<span class="badge ok">Normal</span>'
-                }
-
-              </td>
-
-              <td>
-                ${acoes}
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-      .join("")
-
-      :
-
-      `
+    $("estoqueBody")
+      .innerHTML = `
 
         <tr>
 
-          <td colspan="7">
+          <td colspan="8">
             Nenhum produto encontrado.
           </td>
 
@@ -1872,19 +2137,168 @@ function renderEstoque() {
 
       `;
 
+
+    return;
+
+  }
+
+
+  $("estoqueBody")
+    .innerHTML =
+    lista.map(
+      produto => {
+
+        const total =
+          totalProduto(
+            produto.id
+          );
+
+
+        const baixo =
+          total
+          <=
+          Number(
+            produto.estoqueMinimo
+            ||
+            0
+          );
+
+
+        let acoes =
+          "-";
+
+
+        if (
+          podeOperar()
+        ) {
+
+          acoes = `
+
+            <button
+              class="btn btn-secondary"
+              onclick="editarProduto('${produto.id}')"
+            >
+              Editar
+            </button>
+
+          `;
+
+
+          if (
+            isGestor()
+          ) {
+
+            acoes += `
+
+              <button
+                class="btn btn-danger"
+                onclick="excluirProduto('${produto.id}')"
+              >
+                Excluir
+              </button>
+
+            `;
+
+          }
+
+        }
+
+
+        return `
+
+          <tr>
+
+            <td>
+              ${esc(
+                produto.nome
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                produto.codigoBarras
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                produto.apresentacao
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                produto.unidade
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${total}
+            </td>
+
+            <td>
+              ${Number(
+                produto.estoqueMinimo
+                ||
+                0
+              )}
+            </td>
+
+            <td>
+
+              ${
+                baixo
+
+                  ?
+                  '<span class="badge warning">Baixo</span>'
+
+                  :
+                  '<span class="badge ok">Normal</span>'
+              }
+
+            </td>
+
+            <td>
+              ${acoes}
+            </td>
+
+          </tr>
+
+        `;
+
+      }
+    )
+    .join("");
+
 }
 
 
+// =========================================================
+// PESQUISA
+// =========================================================
+
 $("searchProduto")
-  .addEventListener(
+  ?.addEventListener(
     "input",
     renderEstoque
   );
 
 
+// =========================================================
+// SELECT DE PRODUTOS
+// =========================================================
+
 function preencherSelectProdutos() {
 
-  const opts =
+  const opcoes =
 
     `<option value="">
       Selecione...
@@ -1893,20 +2307,20 @@ function preencherSelectProdutos() {
     +
 
     produtosCache.map(
-      p => `
+      produto => `
 
-        <option value="${p.id}">
+        <option value="${produto.id}">
 
           ${esc(
-            p.nome
+            produto.nome
           )}
 
           ${
-            p.apresentacao
+            produto.apresentacao
 
               ?
               ` - ${esc(
-                p.apresentacao
+                produto.apresentacao
               )}`
 
               :
@@ -1920,14 +2334,26 @@ function preencherSelectProdutos() {
     .join("");
 
 
-  $("entradaProduto")
-    .innerHTML =
-    opts;
+  if (
+    $("entradaProduto")
+  ) {
+
+    $("entradaProduto")
+      .innerHTML =
+      opcoes;
+
+  }
 
 
-  $("baixaProduto")
-    .innerHTML =
-    opts;
+  if (
+    $("baixaProduto")
+  ) {
+
+    $("baixaProduto")
+      .innerHTML =
+      opcoes;
+
+  }
 
 
   preencherLotesBaixa();
@@ -1935,12 +2361,51 @@ function preencherSelectProdutos() {
 }
 
 
-$("entradaForm")
-  .addEventListener(
-    "submit",
-    async (e) => {
+// =========================================================
+// SELEÇÃO MANUAL NA ENTRADA
+// =========================================================
 
-      e.preventDefault();
+$("entradaProduto")
+  ?.addEventListener(
+    "change",
+    () => {
+
+      const produto =
+        produtosCache.find(
+          item =>
+            item.id
+            ===
+            $("entradaProduto")
+              .value
+        );
+
+
+      if (
+        $("entradaCodigoBarras")
+      ) {
+
+        $("entradaCodigoBarras")
+          .value =
+          produto?.codigoBarras
+          ||
+          "";
+
+      }
+
+    }
+  );
+
+
+// =========================================================
+// ENTRADA
+// =========================================================
+
+$("entradaForm")
+  ?.addEventListener(
+    "submit",
+    async (event) => {
+
+      event.preventDefault();
 
 
       if (
@@ -1987,6 +2452,15 @@ $("entradaForm")
         0
       ) {
 
+        showMsg(
+
+          $("entradaMsg"),
+
+          "Preencha os campos obrigatórios."
+
+        );
+
+
         return;
 
       }
@@ -1996,16 +2470,16 @@ $("entradaForm")
 
         const existente =
           lotesCache.find(
-            l =>
+            lote =>
 
-              l.produtoId
+              lote.produtoId
               ===
               produtoId
 
               &&
 
               String(
-                l.lote
+                lote.lote
                 ||
                 ""
               )
@@ -2019,7 +2493,7 @@ $("entradaForm")
 
               &&
 
-              l.validade
+              lote.validade
               ===
               validade
           );
@@ -2048,10 +2522,10 @@ $("entradaForm")
 
             db,
 
-            async (tx) => {
+            async transaction => {
 
               const snap =
-                await tx.get(
+                await transaction.get(
                   loteRef
                 );
 
@@ -2076,7 +2550,7 @@ $("entradaForm")
                 );
 
 
-              tx.update(
+              transaction.update(
 
                 loteRef,
 
@@ -2147,8 +2621,8 @@ $("entradaForm")
 
         const produto =
           produtosCache.find(
-            p =>
-              p.id
+            item =>
+              item.id
               ===
               produtoId
           );
@@ -2170,6 +2644,11 @@ $("entradaForm")
 
             produtoNome:
               produto?.nome
+              ||
+              "",
+
+            codigoBarras:
+              produto?.codigoBarras
               ||
               "",
 
@@ -2226,18 +2705,22 @@ $("entradaForm")
         await carregarMovimentacoes();
 
 
+        preencherSelectProdutos();
+
         renderDashboard();
 
         renderEstoque();
+
+        renderMovimentacoes();
 
         renderValidades();
 
       }
 
-      catch (err) {
+      catch (erro) {
 
         console.error(
-          err
+          erro
         );
 
 
@@ -2245,6 +2728,8 @@ $("entradaForm")
 
           $("entradaMsg"),
 
+          erro.message
+          ||
           "Erro ao registrar entrada."
 
         );
@@ -2255,14 +2740,60 @@ $("entradaForm")
   );
 
 
+// =========================================================
+// SELEÇÃO MANUAL NA BAIXA
+// =========================================================
+
 $("baixaProduto")
-  .addEventListener(
+  ?.addEventListener(
     "change",
-    preencherLotesBaixa
+    () => {
+
+      const produto =
+        produtosCache.find(
+          item =>
+            item.id
+            ===
+            $("baixaProduto")
+              .value
+        );
+
+
+      if (
+        $("baixaCodigoBarras")
+      ) {
+
+        $("baixaCodigoBarras")
+          .value =
+          produto?.codigoBarras
+          ||
+          "";
+
+      }
+
+
+      preencherLotesBaixa();
+
+    }
   );
 
 
+// =========================================================
+// LOTES DA BAIXA - FEFO
+// =========================================================
+
 function preencherLotesBaixa() {
+
+  if (
+    !$("baixaProduto")
+    ||
+    !$("baixaLote")
+  ) {
+
+    return;
+
+  }
+
 
   const produtoId =
     $("baixaProduto")
@@ -2273,16 +2804,16 @@ function preencherLotesBaixa() {
     lotesCache
 
       .filter(
-        l =>
+        lote =>
 
-          l.produtoId
+          lote.produtoId
           ===
           produtoId
 
           &&
 
           Number(
-            l.quantidade
+            lote.quantidade
             ||
             0
           )
@@ -2305,6 +2836,7 @@ function preencherLotesBaixa() {
               "9999"
 
             )
+
       );
 
 
@@ -2319,14 +2851,14 @@ function preencherLotesBaixa() {
 
     lotes.map(
       (
-        l,
-        i
+        lote,
+        indice
       ) => `
 
-        <option value="${l.id}">
+        <option value="${lote.id}">
 
           ${
-            i
+            indice
             ===
             0
 
@@ -2338,19 +2870,19 @@ function preencherLotesBaixa() {
           }
 
           ${esc(
-            l.lote
+            lote.lote
           )}
 
           |
 
           ${formatDateBR(
-            l.validade
+            lote.validade
           )}
 
           |
 
           qtd. ${Number(
-            l.quantidade
+            lote.quantidade
             ||
             0
           )}
@@ -2364,12 +2896,16 @@ function preencherLotesBaixa() {
 }
 
 
-$("baixaForm")
-  .addEventListener(
-    "submit",
-    async (e) => {
+// =========================================================
+// BAIXA
+// =========================================================
 
-      e.preventDefault();
+$("baixaForm")
+  ?.addEventListener(
+    "submit",
+    async (event) => {
+
+      event.preventDefault();
 
 
       if (
@@ -2408,6 +2944,15 @@ $("baixaForm")
         0
       ) {
 
+        showMsg(
+
+          $("baixaMsg"),
+
+          "Preencha os campos obrigatórios."
+
+        );
+
+
         return;
 
       }
@@ -2427,17 +2972,18 @@ $("baixaForm")
           );
 
 
-        let loteDados;
+        let loteDados =
+          null;
 
 
         await runTransaction(
 
           db,
 
-          async (tx) => {
+          async transaction => {
 
             const snap =
-              await tx.get(
+              await transaction.get(
                 loteRef
               );
 
@@ -2480,7 +3026,7 @@ $("baixaForm")
             }
 
 
-            tx.update(
+            transaction.update(
 
               loteRef,
 
@@ -2508,8 +3054,8 @@ $("baixaForm")
 
         const produto =
           produtosCache.find(
-            p =>
-              p.id
+            item =>
+              item.id
               ===
               produtoId
           );
@@ -2531,6 +3077,11 @@ $("baixaForm")
 
             produtoNome:
               produto?.nome
+              ||
+              "",
+
+            codigoBarras:
+              produto?.codigoBarras
               ||
               "",
 
@@ -2577,9 +3128,6 @@ $("baixaForm")
           .reset();
 
 
-        preencherLotesBaixa();
-
-
         showMsg(
 
           $("baixaMsg"),
@@ -2596,6 +3144,8 @@ $("baixaForm")
         await carregarMovimentacoes();
 
 
+        preencherSelectProdutos();
+
         renderDashboard();
 
         renderEstoque();
@@ -2606,10 +3156,10 @@ $("baixaForm")
 
       }
 
-      catch (err) {
+      catch (erro) {
 
         console.error(
-          err
+          erro
         );
 
 
@@ -2617,7 +3167,7 @@ $("baixaForm")
 
           $("baixaMsg"),
 
-          err.message
+          erro.message
           ||
           "Erro ao registrar baixa."
 
@@ -2629,62 +3179,89 @@ $("baixaForm")
   );
 
 
-function dataMov(m) {
+// =========================================================
+// DATA DA MOVIMENTAÇÃO
+// =========================================================
 
-  return m.criadoEm?.toDate
+function dataMov(
+  movimento
+) {
+
+  return movimento.criadoEm?.toDate
 
     ?
-    m.criadoEm
+
+    movimento.criadoEm
       .toDate()
       .toLocaleString(
         "pt-BR"
       )
 
     :
+
     "-";
 
 }
 
 
+// =========================================================
+// MOVIMENTAÇÕES
+// =========================================================
+
 function renderMovimentacoes() {
+
+  if (
+    !$("movBody")
+  ) {
+
+    return;
+
+  }
+
 
   const tipo =
     $("movTipoFiltro")
-      .value;
+      ?.value
+    ||
+    "";
 
 
   const busca =
     $("movBusca")
-      .value
+      ?.value
       .trim()
-      .toLowerCase();
+      .toLowerCase()
+    ||
+    "";
 
 
   const lista =
     movimentosCache.filter(
-      m => {
+      movimento => {
 
-        const okTipo =
+        const tipoOk =
           !tipo
           ||
-          m.tipo
+          movimento.tipo
           ===
           tipo;
 
 
         const texto = [
 
-          m.produtoNome,
+          movimento.produtoNome,
 
-          m.lote,
+          movimento.codigoBarras,
 
-          m.responsavelNome,
+          movimento.lote,
 
-          m.destino,
+          movimento.responsavelNome,
 
-          m.origem,
+          movimento.destino,
 
-          m.motivo
+          movimento.origem,
+
+          movimento.motivo
 
         ]
           .join(" ")
@@ -2693,7 +3270,7 @@ function renderMovimentacoes() {
 
         return (
 
-          okTipo
+          tipoOk
 
           &&
 
@@ -2707,91 +3284,12 @@ function renderMovimentacoes() {
     );
 
 
-  $("movBody")
-    .innerHTML =
+  if (
+    !lista.length
+  ) {
 
-    lista.length
-
-      ?
-
-      lista.map(
-        m => `
-
-          <tr>
-
-            <td>
-              ${dataMov(
-                m
-              )}
-            </td>
-
-            <td>
-
-              ${
-                m.tipo
-                ===
-                "entrada"
-
-                  ?
-                  '<span class="badge ok">Entrada</span>'
-
-                  :
-                  '<span class="badge info">Saída</span>'
-              }
-
-            </td>
-
-            <td>
-              ${esc(
-                m.produtoNome
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                m.lote
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${Number(
-                m.quantidade
-                ||
-                0
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                m.destino
-                ||
-                m.origem
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                m.responsavelNome
-                ||
-                "-"
-              )}
-            </td>
-
-          </tr>
-
-        `
-      )
-      .join("")
-
-      :
-
-      `
+    $("movBody")
+      .innerHTML = `
 
         <tr>
 
@@ -2803,24 +3301,124 @@ function renderMovimentacoes() {
 
       `;
 
+
+    return;
+
+  }
+
+
+  $("movBody")
+    .innerHTML =
+    lista.map(
+      movimento => `
+
+        <tr>
+
+          <td>
+            ${dataMov(
+              movimento
+            )}
+          </td>
+
+          <td>
+
+            ${
+              movimento.tipo
+              ===
+              "entrada"
+
+                ?
+                '<span class="badge ok">Entrada</span>'
+
+                :
+                '<span class="badge info">Saída</span>'
+            }
+
+          </td>
+
+          <td>
+            ${esc(
+              movimento.produtoNome
+              ||
+              "-"
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              movimento.lote
+              ||
+              "-"
+            )}
+          </td>
+
+          <td>
+            ${Number(
+              movimento.quantidade
+              ||
+              0
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              movimento.destino
+              ||
+              movimento.origem
+              ||
+              "-"
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              movimento.responsavelNome
+              ||
+              "-"
+            )}
+          </td>
+
+        </tr>
+
+      `
+    )
+    .join("");
+
 }
 
 
+// =========================================================
+// FILTROS MOVIMENTAÇÃO
+// =========================================================
+
 $("movTipoFiltro")
-  .addEventListener(
+  ?.addEventListener(
     "change",
     renderMovimentacoes
   );
 
 
 $("movBusca")
-  .addEventListener(
+  ?.addEventListener(
     "input",
     renderMovimentacoes
   );
 
 
+// =========================================================
+// VALIDADES
+// =========================================================
+
 function renderValidades() {
+
+  if (
+    !$("validadeBody")
+  ) {
+
+    return;
+
+  }
+
 
   const lista =
     [
@@ -2844,118 +3442,12 @@ function renderValidades() {
       );
 
 
-  $("validadeBody")
-    .innerHTML =
+  if (
+    !lista.length
+  ) {
 
-    lista.length
-
-      ?
-
-      lista.map(
-        l => {
-
-          const p =
-            produtosCache.find(
-              x =>
-                x.id
-                ===
-                l.produtoId
-            );
-
-
-          const d =
-            diasAte(
-              l.validade
-            );
-
-
-          let status =
-            '<span class="badge ok">Regular</span>';
-
-
-          if (
-            d
-            <
-            0
-          ) {
-
-            status =
-              '<span class="badge danger">Vencido</span>';
-
-          }
-
-          else if (
-            d
-            <=
-            30
-          ) {
-
-            status =
-              '<span class="badge danger">Até 30 dias</span>';
-
-          }
-
-          else if (
-            d
-            <=
-            90
-          ) {
-
-            status =
-              '<span class="badge warning">Até 90 dias</span>';
-
-          }
-
-
-          return `
-
-            <tr>
-
-              <td>
-                ${esc(
-                  p?.nome
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  l.lote
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${formatDateBR(
-                  l.validade
-                )}
-              </td>
-
-              <td>
-                ${Number(
-                  l.quantidade
-                  ||
-                  0
-                )}
-              </td>
-
-              <td>
-                ${status}
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-      .join("")
-
-      :
-
-      `
+    $("validadeBody")
+      .innerHTML = `
 
         <tr>
 
@@ -2967,13 +3459,136 @@ function renderValidades() {
 
       `;
 
+
+    return;
+
+  }
+
+
+  $("validadeBody")
+    .innerHTML =
+    lista.map(
+      lote => {
+
+        const produto =
+          produtosCache.find(
+            item =>
+              item.id
+              ===
+              lote.produtoId
+          );
+
+
+        const dias =
+          diasAte(
+            lote.validade
+          );
+
+
+        let status =
+          '<span class="badge ok">Regular</span>';
+
+
+        if (
+          dias
+          <
+          0
+        ) {
+
+          status =
+            '<span class="badge danger">Vencido</span>';
+
+        }
+
+        else if (
+          dias
+          <=
+          30
+        ) {
+
+          status =
+            '<span class="badge danger">Até 30 dias</span>';
+
+        }
+
+        else if (
+          dias
+          <=
+          90
+        ) {
+
+          status =
+            '<span class="badge warning">Até 90 dias</span>';
+
+        }
+
+
+        return `
+
+          <tr>
+
+            <td>
+              ${esc(
+                produto?.nome
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                lote.lote
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${formatDateBR(
+                lote.validade
+              )}
+            </td>
+
+            <td>
+              ${Number(
+                lote.quantidade
+                ||
+                0
+              )}
+            </td>
+
+            <td>
+              ${status}
+            </td>
+
+          </tr>
+
+        `;
+
+      }
+    )
+    .join("");
+
 }
 
+
+// =========================================================
+// USUÁRIOS
+// =========================================================
 
 async function carregarUsuarios() {
 
   if (
     !isGestor()
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !$("usuariosBody")
   ) {
 
     return;
@@ -2994,80 +3609,25 @@ async function carregarUsuarios() {
       );
 
 
-    const users =
+    const usuarios =
       snap.docs.map(
-        d => ({
+        documento => ({
 
           id:
-            d.id,
+            documento.id,
 
-          ...d.data()
+          ...documento.data()
 
         })
       );
 
 
-    $("usuariosBody")
-      .innerHTML =
+    if (
+      !usuarios.length
+    ) {
 
-      users.length
-
-        ?
-
-        users.map(
-          u => `
-
-            <tr>
-
-              <td>
-                ${esc(
-                  u.nome
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  u.email
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  perfilLabel(
-                    u.perfil
-                  )
-                )}
-              </td>
-
-              <td>
-
-                ${
-                  u.ativo
-                  ===
-                  false
-
-                    ?
-                    '<span class="badge danger">Não</span>'
-
-                    :
-                    '<span class="badge ok">Sim</span>'
-                }
-
-              </td>
-
-            </tr>
-
-          `
-        )
-        .join("")
-
-        :
-
-        `
+      $("usuariosBody")
+        .innerHTML = `
 
           <tr>
 
@@ -3079,12 +3639,71 @@ async function carregarUsuarios() {
 
         `;
 
+
+      return;
+
+    }
+
+
+    $("usuariosBody")
+      .innerHTML =
+      usuarios.map(
+        usuario => `
+
+          <tr>
+
+            <td>
+              ${esc(
+                usuario.nome
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                usuario.email
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                perfilLabel(
+                  usuario.perfil
+                )
+              )}
+            </td>
+
+            <td>
+
+              ${
+                usuario.ativo
+                ===
+                false
+
+                  ?
+                  '<span class="badge danger">Não</span>'
+
+                  :
+                  '<span class="badge ok">Sim</span>'
+              }
+
+            </td>
+
+          </tr>
+
+        `
+      )
+      .join("");
+
   }
 
-  catch (err) {
+  catch (erro) {
 
     console.error(
-      err
+      erro
     );
 
 
@@ -3104,3 +3723,692 @@ async function carregarUsuarios() {
   }
 
 }
+
+
+// =========================================================
+// STATUS DO SCANNER
+// =========================================================
+
+function statusScanner(
+  texto
+) {
+
+  if (
+    $("scannerStatus")
+  ) {
+
+    $("scannerStatus")
+      .textContent =
+      texto;
+
+  }
+
+}
+
+
+// =========================================================
+// FECHAR CÂMERA
+// =========================================================
+
+function fecharScanner() {
+
+  scannerAtivo =
+    false;
+
+
+  scannerDestino =
+    null;
+
+
+  ultimoCodigoLido =
+    "";
+
+
+  try {
+
+    scannerControles
+      ?.stop?.();
+
+  }
+
+  catch (erro) {
+
+    console.warn(
+      "Erro ao parar scanner:",
+      erro
+    );
+
+  }
+
+
+  scannerControles =
+    null;
+
+
+  const video =
+    $("scannerVideo");
+
+
+  if (
+    video?.srcObject
+  ) {
+
+    try {
+
+      video
+        .srcObject
+        .getTracks()
+        .forEach(
+          track => {
+
+            track.stop();
+
+          }
+        );
+
+    }
+
+    catch (erro) {
+
+      console.warn(
+        "Erro ao encerrar câmera:",
+        erro
+      );
+
+    }
+
+
+    video.srcObject =
+      null;
+
+  }
+
+
+  $("scannerModal")
+    ?.classList
+    .add(
+      "hidden"
+    );
+
+}
+
+
+// =========================================================
+// PROCESSAR CÓDIGO DA CÂMERA
+// =========================================================
+
+function processarCodigoScanner(
+  codigo
+) {
+
+  const codigoNormalizado =
+    normalizarCodigoBarras(
+      codigo
+    );
+
+
+  if (
+    !codigoNormalizado
+  ) {
+
+    return;
+
+  }
+
+
+  const agora =
+    Date.now();
+
+
+  if (
+    codigoNormalizado
+    ===
+    ultimoCodigoLido
+
+    &&
+
+    agora
+    -
+    ultimoCodigoTempo
+    <
+    1500
+  ) {
+
+    return;
+
+  }
+
+
+  ultimoCodigoLido =
+    codigoNormalizado;
+
+
+  ultimoCodigoTempo =
+    agora;
+
+
+  const produto =
+    encontrarProdutoPorCodigo(
+      codigoNormalizado
+    );
+
+
+  if (
+    !produto
+  ) {
+
+    statusScanner(
+
+      `Código ${codigoNormalizado} não está cadastrado no SISFAR.`
+
+    );
+
+
+    if (
+      navigator.vibrate
+    ) {
+
+      navigator.vibrate([
+        100,
+        80,
+        100
+      ]);
+
+    }
+
+
+    return;
+
+  }
+
+
+  if (
+    scannerDestino
+    ===
+    "entrada"
+  ) {
+
+    if (
+      $("entradaCodigoBarras")
+    ) {
+
+      $("entradaCodigoBarras")
+        .value =
+        codigoNormalizado;
+
+    }
+
+
+    if (
+      $("entradaProduto")
+    ) {
+
+      $("entradaProduto")
+        .value =
+        produto.id;
+
+    }
+
+
+    hideMsg(
+      $("entradaMsg")
+    );
+
+  }
+
+
+  if (
+    scannerDestino
+    ===
+    "baixa"
+  ) {
+
+    if (
+      $("baixaCodigoBarras")
+    ) {
+
+      $("baixaCodigoBarras")
+        .value =
+        codigoNormalizado;
+
+    }
+
+
+    if (
+      $("baixaProduto")
+    ) {
+
+      $("baixaProduto")
+        .value =
+        produto.id;
+
+    }
+
+
+    preencherLotesBaixa();
+
+
+    hideMsg(
+      $("baixaMsg")
+    );
+
+  }
+
+
+  statusScanner(
+
+    `Produto encontrado: ${produto.nome}`
+
+  );
+
+
+  if (
+    navigator.vibrate
+  ) {
+
+    navigator.vibrate(
+      120
+    );
+
+  }
+
+
+  setTimeout(
+    fecharScanner,
+    350
+  );
+
+}
+
+
+// =========================================================
+// ABRIR CÂMERA
+// =========================================================
+
+async function abrirScanner(
+  destino
+) {
+
+  if (
+    scannerAtivo
+  ) {
+
+    return;
+
+  }
+
+
+  const modal =
+    $("scannerModal");
+
+
+  const video =
+    $("scannerVideo");
+
+
+  if (
+    !modal
+    ||
+    !video
+  ) {
+
+    alert(
+      "O leitor de câmera não foi encontrado."
+    );
+
+
+    return;
+
+  }
+
+
+  if (
+    !window.ZXingBrowser
+  ) {
+
+    alert(
+      "A biblioteca do leitor de código de barras não carregou. Atualize a página e tente novamente."
+    );
+
+
+    return;
+
+  }
+
+
+  scannerDestino =
+    destino;
+
+
+  scannerAtivo =
+    true;
+
+
+  ultimoCodigoLido =
+    "";
+
+
+  ultimoCodigoTempo =
+    0;
+
+
+  modal.classList.remove(
+    "hidden"
+  );
+
+
+  statusScanner(
+    "Solicitando acesso à câmera..."
+  );
+
+
+  try {
+
+    const leitor =
+      new window.ZXingBrowser
+        .BrowserMultiFormatReader();
+
+
+    const dispositivos =
+      await window.ZXingBrowser
+        .BrowserCodeReader
+        .listVideoInputDevices();
+
+
+    if (
+      !dispositivos.length
+    ) {
+
+      throw new Error(
+        "Nenhuma câmera encontrada."
+      );
+
+    }
+
+
+    let camera =
+      dispositivos[0];
+
+
+    const traseira =
+      dispositivos.find(
+        dispositivo => {
+
+          const nome =
+            (
+              dispositivo.label
+              ||
+              ""
+            )
+              .toLowerCase();
+
+
+          return (
+
+            nome.includes(
+              "back"
+            )
+
+            ||
+
+            nome.includes(
+              "rear"
+            )
+
+            ||
+
+            nome.includes(
+              "environment"
+            )
+
+            ||
+
+            nome.includes(
+              "traseira"
+            )
+
+          );
+
+        }
+      );
+
+
+    if (
+      traseira
+    ) {
+
+      camera =
+        traseira;
+
+    }
+
+
+    statusScanner(
+      "Câmera ativa. Aponte para o código de barras."
+    );
+
+
+    scannerControles =
+      await leitor.decodeFromVideoDevice(
+
+        camera.deviceId,
+
+        video,
+
+        (
+          resultado,
+          erro,
+          controles
+        ) => {
+
+          scannerControles =
+            controles;
+
+
+          if (
+            resultado
+          ) {
+
+            processarCodigoScanner(
+              resultado.getText()
+            );
+
+          }
+
+
+          if (
+            erro
+            &&
+            erro.name
+            !==
+            "NotFoundException"
+          ) {
+
+            console.debug(
+              "Scanner:",
+              erro
+            );
+
+          }
+
+        }
+
+      );
+
+  }
+
+  catch (erro) {
+
+    console.error(
+      "Erro na câmera:",
+      erro
+    );
+
+
+    scannerAtivo =
+      false;
+
+
+    let mensagem =
+      "Não foi possível abrir a câmera.";
+
+
+    if (
+      erro?.name
+      ===
+      "NotAllowedError"
+
+      ||
+
+      erro?.name
+      ===
+      "PermissionDeniedError"
+    ) {
+
+      mensagem =
+        "Permissão da câmera negada. Autorize a câmera no navegador e tente novamente.";
+
+    }
+
+    else if (
+      erro?.name
+      ===
+      "NotFoundError"
+    ) {
+
+      mensagem =
+        "Nenhuma câmera foi encontrada neste aparelho.";
+
+    }
+
+    else if (
+      erro?.name
+      ===
+      "NotReadableError"
+    ) {
+
+      mensagem =
+        "A câmera está sendo utilizada por outro aplicativo.";
+
+    }
+
+    else if (
+      erro?.message
+    ) {
+
+      mensagem =
+        erro.message;
+
+    }
+
+
+    statusScanner(
+      mensagem
+    );
+
+  }
+
+}
+
+
+// =========================================================
+// CÂMERA - ENTRADA
+// =========================================================
+
+$("btnScanEntrada")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      abrirScanner(
+        "entrada"
+      );
+
+    }
+  );
+
+
+// =========================================================
+// CÂMERA - BAIXA
+// =========================================================
+
+$("btnScanBaixa")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      abrirScanner(
+        "baixa"
+      );
+
+    }
+  );
+
+
+// =========================================================
+// FECHAR SCANNER
+// =========================================================
+
+$("btnFecharScanner")
+  ?.addEventListener(
+    "click",
+    fecharScanner
+  );
+
+
+// =========================================================
+// FECHAR CLICANDO FORA
+// =========================================================
+
+$("scannerModal")
+  ?.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target
+        ===
+        $("scannerModal")
+      ) {
+
+        fecharScanner();
+
+      }
+
+    }
+  );
+
+
+// =========================================================
+// FECHAR AO SAIR DA ABA
+// =========================================================
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if (
+      document.hidden
+      &&
+      scannerAtivo
+    ) {
+
+      fecharScanner();
+
+    }
+
+  }
+);
+
+
+// =========================================================
+// FIM DO APP.JS
+// =========================================================
+
+console.log(
+  "✅ SISFAR V2 carregado."
+);
+
+console.log(
+  "📷 Leitor pela câmera disponível."
+);
