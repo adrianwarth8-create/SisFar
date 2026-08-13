@@ -1,329 +1,1204 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <title>SISFAR V2 - Controle de Estoque</title>
-  <link rel="stylesheet" href="./style.css" />
+
+  <link
+    rel="stylesheet"
+    href="./style.css"
+  >
+
+  <!-- ===================================================== -->
+  <!-- ZXING - LEITOR DE CÓDIGO DE BARRAS PELA CÂMERA -->
+  <!-- ===================================================== -->
+
+  <script
+    src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"
+  ></script>
+
 </head>
+
 <body>
 
-<section id="loginScreen" class="login-screen">
-  <div class="login-card">
-    <div class="brand">
-      <h1>SISFAR V2</h1>
-      <p>Sistema Integrado de Controle de Estoque de Farmácia</p>
-    </div>
-    <form id="loginForm">
-      <div class="field">
-        <label for="loginEmail">E-mail</label>
-        <input id="loginEmail" type="email" required autocomplete="username" />
+  <!-- ===================================================== -->
+  <!-- LOGIN -->
+  <!-- ===================================================== -->
+
+  <section
+    id="loginScreen"
+    class="login-screen"
+  >
+
+    <div class="login-card">
+
+      <div class="brand">
+
+        <h1>SISFAR V2</h1>
+
+        <p>
+          Sistema Integrado de Controle de Estoque de Farmácia
+        </p>
+
       </div>
-      <div class="field">
-        <label for="loginSenha">Senha</label>
-        <input id="loginSenha" type="password" required autocomplete="current-password" />
-      </div>
-      <button class="btn btn-primary btn-full" type="submit">Entrar</button>
-      <div id="loginMsg" class="message hidden"></div>
-    </form>
-  </div>
-</section>
 
-<section id="appScreen" class="app hidden">
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <h2>SISFAR V2</h2>
-      <small>Controle de Farmácia</small>
-    </div>
+      <form id="loginForm">
 
-    <button class="nav-btn active" data-page="dashboard">🏠 Dashboard</button>
-    <button class="nav-btn" data-page="estoque">📦 Estoque</button>
-    <button class="nav-btn perm-operacao" data-page="entrada">➕ Entrada</button>
-    <button class="nav-btn perm-operacao" data-page="baixa">➖ Baixa / Saída</button>
-    <button class="nav-btn" data-page="movimentacoes">🔄 Movimentações</button>
-    <button class="nav-btn" data-page="validade">📅 Lotes e Validades</button>
-    <button class="nav-btn gestor-only" data-page="usuarios">👥 Usuários</button>
-    <button class="nav-btn" id="logoutBtn">🚪 Sair</button>
-  </aside>
+        <div class="field">
 
-  <main class="main">
-    <header class="topbar">
-      <div>
-        <strong id="pageHeader">Dashboard</strong>
-      </div>
-      <div class="top-user">
-        <strong id="userName">Usuário</strong>
-        <small id="userProfile">perfil</small>
-      </div>
-    </header>
+          <label for="loginEmail">
+            E-mail
+          </label>
 
-    <div class="content">
+          <input
+            id="loginEmail"
+            type="email"
+            required
+            autocomplete="username"
+          >
 
-      <section id="page-dashboard" class="page">
-        <h1 class="page-title">Dashboard</h1>
-        <div class="cards">
-          <div class="card">
-            <div class="stat-label">Produtos cadastrados</div>
-            <div id="statProdutos" class="stat-value">0</div>
-          </div>
-          <div class="card">
-            <div class="stat-label">Quantidade total em estoque</div>
-            <div id="statQuantidade" class="stat-value">0</div>
-          </div>
-          <div class="card">
-            <div class="stat-label">Estoque baixo</div>
-            <div id="statBaixo" class="stat-value">0</div>
-          </div>
-          <div class="card">
-            <div class="stat-label">Próximos do vencimento</div>
-            <div id="statVencendo" class="stat-value">0</div>
-          </div>
         </div>
 
-        <div class="panel">
+        <div class="field">
+
+          <label for="loginSenha">
+            Senha
+          </label>
+
+          <input
+            id="loginSenha"
+            type="password"
+            required
+            autocomplete="current-password"
+          >
+
+        </div>
+
+        <button
+          class="btn btn-primary btn-full"
+          type="submit"
+        >
+          Entrar
+        </button>
+
+        <div
+          id="loginMsg"
+          class="message hidden"
+        ></div>
+
+      </form>
+
+    </div>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- SISTEMA -->
+  <!-- ===================================================== -->
+
+  <section
+    id="appScreen"
+    class="app hidden"
+  >
+
+    <!-- ===================================================== -->
+    <!-- MENU LATERAL -->
+    <!-- ===================================================== -->
+
+    <aside class="sidebar">
+
+      <div class="sidebar-brand">
+
+        <h2>SISFAR V2</h2>
+
+        <small>
+          Controle de Farmácia
+        </small>
+
+      </div>
+
+      <button
+        class="nav-btn active"
+        data-page="dashboard"
+      >
+        🏠 Dashboard
+      </button>
+
+      <button
+        class="nav-btn"
+        data-page="estoque"
+      >
+        📦 Estoque
+      </button>
+
+      <button
+        class="nav-btn perm-operacao"
+        data-page="entrada"
+      >
+        ➕ Entrada
+      </button>
+
+      <button
+        class="nav-btn perm-operacao"
+        data-page="baixa"
+      >
+        ➖ Baixa / Saída
+      </button>
+
+      <button
+        class="nav-btn"
+        data-page="movimentacoes"
+      >
+        🔄 Movimentações
+      </button>
+
+      <button
+        class="nav-btn"
+        data-page="validade"
+      >
+        📅 Lotes e Validades
+      </button>
+
+      <button
+        class="nav-btn gestor-only"
+        data-page="usuarios"
+      >
+        👥 Usuários
+      </button>
+
+      <button
+        class="nav-btn"
+        id="logoutBtn"
+      >
+        🚪 Sair
+      </button>
+
+    </aside>
+
+
+    <!-- ===================================================== -->
+    <!-- ÁREA PRINCIPAL -->
+    <!-- ===================================================== -->
+
+    <main class="main">
+
+
+      <!-- ===================================================== -->
+      <!-- TOPO -->
+      <!-- ===================================================== -->
+
+      <header class="topbar">
+
+        <div>
+
+          <strong id="pageHeader">
+            Dashboard
+          </strong>
+
+        </div>
+
+        <div class="top-user">
+
+          <strong id="userName">
+            Usuário
+          </strong>
+
+          <small id="userProfile">
+            perfil
+          </small>
+
+        </div>
+
+      </header>
+
+
+      <div class="content">
+
+
+        <!-- ===================================================== -->
+        <!-- DASHBOARD -->
+        <!-- ===================================================== -->
+
+        <section
+          id="page-dashboard"
+          class="page"
+        >
+
+          <h1 class="page-title">
+            Dashboard
+          </h1>
+
+          <div class="cards">
+
+            <div class="card">
+
+              <div class="stat-label">
+                Produtos cadastrados
+              </div>
+
+              <div
+                id="statProdutos"
+                class="stat-value"
+              >
+                0
+              </div>
+
+            </div>
+
+            <div class="card">
+
+              <div class="stat-label">
+                Quantidade total em estoque
+              </div>
+
+              <div
+                id="statQuantidade"
+                class="stat-value"
+              >
+                0
+              </div>
+
+            </div>
+
+            <div class="card">
+
+              <div class="stat-label">
+                Estoque baixo
+              </div>
+
+              <div
+                id="statBaixo"
+                class="stat-value"
+              >
+                0
+              </div>
+
+            </div>
+
+            <div class="card">
+
+              <div class="stat-label">
+                Próximos do vencimento
+              </div>
+
+              <div
+                id="statVencendo"
+                class="stat-value"
+              >
+                0
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="panel">
+
+            <div class="panel-head">
+
+              <h3>
+                Atenção de estoque e validade
+              </h3>
+
+              <button
+                class="btn btn-secondary"
+                id="refreshDashboard"
+              >
+                Atualizar
+              </button>
+
+            </div>
+
+            <div class="table-wrap">
+
+              <table>
+
+                <thead>
+
+                  <tr>
+
+                    <th>Produto</th>
+
+                    <th>Lote</th>
+
+                    <th>Validade</th>
+
+                    <th>Quantidade</th>
+
+                    <th>Situação</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody id="dashboardAlertas">
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================== -->
+        <!-- ESTOQUE -->
+        <!-- ===================================================== -->
+
+        <section
+          id="page-estoque"
+          class="page hidden"
+        >
+
           <div class="panel-head">
-            <h3>Atenção de estoque e validade</h3>
-            <button class="btn btn-secondary" id="refreshDashboard">Atualizar</button>
+
+            <h1
+              class="page-title"
+              style="margin:0"
+            >
+              Estoque
+            </h1>
+
+            <button
+              id="btnNovoProduto"
+              class="btn btn-primary perm-operacao"
+            >
+              Novo produto
+            </button>
+
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th>Lote</th>
-                  <th>Validade</th>
-                  <th>Quantidade</th>
-                  <th>Situação</th>
-                </tr>
-              </thead>
-              <tbody id="dashboardAlertas"></tbody>
-            </table>
+
+
+          <div
+            id="produtoFormPanel"
+            class="panel hidden"
+          >
+
+            <h3 id="produtoFormTitulo">
+              Cadastrar produto
+            </h3>
+
+            <form
+              id="produtoForm"
+              class="form-grid"
+            >
+
+              <input
+                type="hidden"
+                id="produtoId"
+              >
+
+              <div class="field">
+
+                <label>
+                  Nome do produto
+                </label>
+
+                <input
+                  id="produtoNome"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Código de barras
+                </label>
+
+                <input
+                  id="produtoCodigoBarras"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Ex.: 7891234567890"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Apresentação
+                </label>
+
+                <input
+                  id="produtoApresentacao"
+                  placeholder="Ex.: comprimido 500 mg"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Categoria
+                </label>
+
+                <input
+                  id="produtoCategoria"
+                  placeholder="Ex.: medicamento, material"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Unidade
+                </label>
+
+                <input
+                  id="produtoUnidade"
+                  placeholder="Ex.: un, cx, frasco"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Estoque mínimo
+                </label>
+
+                <input
+                  id="produtoMinimo"
+                  type="number"
+                  min="0"
+                  value="0"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Localização
+                </label>
+
+                <input
+                  id="produtoLocalizacao"
+                  placeholder="Ex.: Armário A / Prateleira 2"
+                >
+
+              </div>
+
+
+              <div class="form-actions">
+
+                <button
+                  type="button"
+                  id="cancelProduto"
+                  class="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                >
+                  Salvar
+                </button>
+
+              </div>
+
+            </form>
+
           </div>
-        </div>
-      </section>
 
-      <section id="page-estoque" class="page hidden">
-        <div class="panel-head">
-          <h1 class="page-title" style="margin:0">Estoque</h1>
-          <button id="btnNovoProduto" class="btn btn-primary perm-operacao">Novo produto</button>
-        </div>
 
-        <div id="produtoFormPanel" class="panel hidden">
-          <h3 id="produtoFormTitulo">Cadastrar produto</h3>
-          <form id="produtoForm" class="form-grid">
-            <input type="hidden" id="produtoId" />
-            <div class="field">
-              <label>Nome do produto</label>
-              <input id="produtoNome" required />
-            </div>
-            <div class="field">
-              <label>Apresentação</label>
-              <input id="produtoApresentacao" placeholder="Ex.: comprimido 500 mg" />
-            </div>
-            <div class="field">
-              <label>Categoria</label>
-              <input id="produtoCategoria" placeholder="Ex.: medicamento, material" />
-            </div>
-            <div class="field">
-              <label>Unidade</label>
-              <input id="produtoUnidade" placeholder="Ex.: un, cx, frasco" required />
-            </div>
-            <div class="field">
-              <label>Estoque mínimo</label>
-              <input id="produtoMinimo" type="number" min="0" value="0" required />
-            </div>
-            <div class="field">
-              <label>Localização</label>
-              <input id="produtoLocalizacao" placeholder="Ex.: Armário A / Prateleira 2" />
-            </div>
-            <div class="form-actions">
-              <button type="button" id="cancelProduto" class="btn btn-secondary">Cancelar</button>
-              <button type="submit" class="btn btn-primary">Salvar</button>
-            </div>
-          </form>
-        </div>
+          <div class="panel">
 
-        <div class="panel">
-          <div class="toolbar">
-            <input id="searchProduto" placeholder="Pesquisar produto..." />
+            <div class="toolbar">
+
+              <input
+                id="searchProduto"
+                placeholder="Pesquisar produto..."
+              >
+
+            </div>
+
+            <div class="table-wrap">
+
+              <table>
+
+                <thead>
+
+                  <tr>
+
+                    <th>Produto</th>
+
+                    <th>Código</th>
+
+                    <th>Apresentação</th>
+
+                    <th>Unidade</th>
+
+                    <th>Qtd. total</th>
+
+                    <th>Mínimo</th>
+
+                    <th>Situação</th>
+
+                    <th>Ações</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody id="estoqueBody">
+                </tbody>
+
+              </table>
+
+            </div>
+
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th>Apresentação</th>
-                  <th>Unidade</th>
-                  <th>Qtd. total</th>
-                  <th>Mínimo</th>
-                  <th>Situação</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="estoqueBody"></tbody>
-            </table>
+
+        </section>
+
+
+        <!-- ===================================================== -->
+        <!-- ENTRADA -->
+        <!-- ===================================================== -->
+
+        <section
+          id="page-entrada"
+          class="page hidden"
+        >
+
+          <h1 class="page-title">
+            Entrada de estoque
+          </h1>
+
+          <div class="panel">
+
+            <div class="notice">
+              Você pode selecionar o produto manualmente ou usar a câmera do celular para ler o código de barras.
+            </div>
+
+            <form
+              id="entradaForm"
+              class="form-grid"
+            >
+
+
+              <div class="field">
+
+                <label>
+                  Código de barras
+                </label>
+
+                <input
+                  id="entradaCodigoBarras"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Código lido pela câmera"
+                  readonly
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Leitura
+                </label>
+
+                <button
+                  type="button"
+                  id="btnScanEntrada"
+                  class="btn btn-secondary"
+                >
+                  📷 Ler código com a câmera
+                </button>
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Produto
+                </label>
+
+                <select
+                  id="entradaProduto"
+                  required
+                >
+                </select>
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Lote
+                </label>
+
+                <input
+                  id="entradaLote"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Validade
+                </label>
+
+                <input
+                  id="entradaValidade"
+                  type="date"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Quantidade
+                </label>
+
+                <input
+                  id="entradaQuantidade"
+                  type="number"
+                  min="1"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Origem / Fornecedor
+                </label>
+
+                <input id="entradaOrigem">
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Observação
+                </label>
+
+                <input id="entradaObs">
+
+              </div>
+
+
+              <div class="form-actions">
+
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                >
+                  Registrar entrada
+                </button>
+
+              </div>
+
+            </form>
+
+            <div
+              id="entradaMsg"
+              class="message hidden"
+            >
+            </div>
+
           </div>
-        </div>
-      </section>
 
-      <section id="page-entrada" class="page hidden">
-        <h1 class="page-title">Entrada de estoque</h1>
-        <div class="panel">
-          <form id="entradaForm" class="form-grid">
-            <div class="field">
-              <label>Produto</label>
-              <select id="entradaProduto" required></select>
-            </div>
-            <div class="field">
-              <label>Lote</label>
-              <input id="entradaLote" required />
-            </div>
-            <div class="field">
-              <label>Validade</label>
-              <input id="entradaValidade" type="date" required />
-            </div>
-            <div class="field">
-              <label>Quantidade</label>
-              <input id="entradaQuantidade" type="number" min="1" required />
-            </div>
-            <div class="field">
-              <label>Origem / Fornecedor</label>
-              <input id="entradaOrigem" />
-            </div>
-            <div class="field">
-              <label>Observação</label>
-              <input id="entradaObs" />
-            </div>
-            <div class="form-actions">
-              <button class="btn btn-primary" type="submit">Registrar entrada</button>
-            </div>
-          </form>
-          <div id="entradaMsg" class="message hidden"></div>
-        </div>
-      </section>
+        </section>
 
-      <section id="page-baixa" class="page hidden">
-        <h1 class="page-title">Baixa / Saída</h1>
-        <div class="notice">
-          O sistema apresenta os lotes do produto em ordem de validade, ajudando a aplicar FEFO: primeiro que vence, primeiro que sai.
-        </div>
-        <div class="panel">
-          <form id="baixaForm" class="form-grid">
-            <div class="field">
-              <label>Produto</label>
-              <select id="baixaProduto" required></select>
+
+        <!-- ===================================================== -->
+        <!-- BAIXA -->
+        <!-- ===================================================== -->
+
+        <section
+          id="page-baixa"
+          class="page hidden"
+        >
+
+          <h1 class="page-title">
+            Baixa / Saída
+          </h1>
+
+          <div class="notice">
+            O sistema apresenta os lotes em ordem de validade, ajudando a aplicar FEFO: primeiro que vence, primeiro que sai.
+          </div>
+
+          <div class="panel">
+
+            <form
+              id="baixaForm"
+              class="form-grid"
+            >
+
+
+              <div class="field">
+
+                <label>
+                  Código de barras
+                </label>
+
+                <input
+                  id="baixaCodigoBarras"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Código lido pela câmera"
+                  readonly
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Leitura
+                </label>
+
+                <button
+                  type="button"
+                  id="btnScanBaixa"
+                  class="btn btn-secondary"
+                >
+                  📷 Ler código com a câmera
+                </button>
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Produto
+                </label>
+
+                <select
+                  id="baixaProduto"
+                  required
+                >
+                </select>
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Lote
+                </label>
+
+                <select
+                  id="baixaLote"
+                  required
+                >
+                </select>
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Quantidade
+                </label>
+
+                <input
+                  id="baixaQuantidade"
+                  type="number"
+                  min="1"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Destino
+                </label>
+
+                <input
+                  id="baixaDestino"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Motivo
+                </label>
+
+                <select
+                  id="baixaMotivo"
+                  required
+                >
+
+                  <option value="Consumo">
+                    Consumo
+                  </option>
+
+                  <option value="Transferência">
+                    Transferência
+                  </option>
+
+                  <option value="Perda">
+                    Perda
+                  </option>
+
+                  <option value="Avaria">
+                    Avaria
+                  </option>
+
+                  <option value="Vencimento">
+                    Vencimento
+                  </option>
+
+                  <option value="Outro">
+                    Outro
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div class="field">
+
+                <label>
+                  Observação
+                </label>
+
+                <input id="baixaObs">
+
+              </div>
+
+
+              <div class="form-actions">
+
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                >
+                  Registrar baixa
+                </button>
+
+              </div>
+
+            </form>
+
+            <div
+              id="baixaMsg"
+              class="message hidden"
+            >
             </div>
-            <div class="field">
-              <label>Lote</label>
-              <select id="baixaLote" required></select>
-            </div>
-            <div class="field">
-              <label>Quantidade</label>
-              <input id="baixaQuantidade" type="number" min="1" required />
-            </div>
-            <div class="field">
-              <label>Destino</label>
-              <input id="baixaDestino" required />
-            </div>
-            <div class="field">
-              <label>Motivo</label>
-              <select id="baixaMotivo" required>
-                <option value="Consumo">Consumo</option>
-                <option value="Transferência">Transferência</option>
-                <option value="Perda">Perda</option>
-                <option value="Avaria">Avaria</option>
-                <option value="Vencimento">Vencimento</option>
-                <option value="Outro">Outro</option>
+
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================== -->
+        <!-- MOVIMENTAÇÕES -->
+        <!-- ===================================================== -->
+
+        <section
+          id="page-movimentacoes"
+          class="page hidden"
+        >
+
+          <h1 class="page-title">
+            Movimentações
+          </h1>
+
+          <div class="panel">
+
+            <div class="toolbar">
+
+              <select id="movTipoFiltro">
+
+                <option value="">
+                  Todos os tipos
+                </option>
+
+                <option value="entrada">
+                  Entradas
+                </option>
+
+                <option value="saida">
+                  Saídas
+                </option>
+
               </select>
-            </div>
-            <div class="field">
-              <label>Observação</label>
-              <input id="baixaObs" />
-            </div>
-            <div class="form-actions">
-              <button class="btn btn-primary" type="submit">Registrar baixa</button>
-            </div>
-          </form>
-          <div id="baixaMsg" class="message hidden"></div>
-        </div>
-      </section>
 
-      <section id="page-movimentacoes" class="page hidden">
-        <h1 class="page-title">Movimentações</h1>
-        <div class="panel">
-          <div class="toolbar">
-            <select id="movTipoFiltro">
-              <option value="">Todos os tipos</option>
-              <option value="entrada">Entradas</option>
-              <option value="saida">Saídas</option>
-            </select>
-            <input id="movBusca" placeholder="Pesquisar produto, lote ou responsável..." />
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Data/Hora</th>
-                  <th>Tipo</th>
-                  <th>Produto</th>
-                  <th>Lote</th>
-                  <th>Quantidade</th>
-                  <th>Destino/Origem</th>
-                  <th>Responsável</th>
-                </tr>
-              </thead>
-              <tbody id="movBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+              <input
+                id="movBusca"
+                placeholder="Pesquisar produto, lote ou responsável..."
+              >
 
-      <section id="page-validade" class="page hidden">
-        <h1 class="page-title">Lotes e Validades</h1>
-        <div class="panel">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th>Lote</th>
-                  <th>Validade</th>
-                  <th>Quantidade</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="validadeBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+            </div>
 
-      <section id="page-usuarios" class="page hidden">
-        <h1 class="page-title">Usuários</h1>
-        <div class="notice">
-          Nesta primeira versão, os usuários são criados pelo Firebase Authentication e recebem o perfil na coleção <b>usuarios</b>. O painel de criação automática será adicionado na próxima etapa.
-        </div>
-        <div class="panel">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>E-mail</th>
-                  <th>Perfil</th>
-                  <th>Ativo</th>
-                </tr>
-              </thead>
-              <tbody id="usuariosBody"></tbody>
-            </table>
+            <div class="table-wrap">
+
+              <table>
+
+                <thead>
+
+                  <tr>
+
+                    <th>Data/Hora</th>
+
+                    <th>Tipo</th>
+
+                    <th>Produto</th>
+
+                    <th>Lote</th>
+
+                    <th>Quantidade</th>
+
+                    <th>Destino/Origem</th>
+
+                    <th>Responsável</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody id="movBody">
+                </tbody>
+
+              </table>
+
+            </div>
+
           </div>
+
+        </section>
+
+
+        <!-- ===================================================== -->
+        <!-- LOTES E VALIDADES -->
+        <!-- ===================================================== -->
+
+        <section
+          id="page-validade"
+          class="page hidden"
+        >
+
+          <h1 class="page-title">
+            Lotes e Validades
+          </h1>
+
+          <div class="panel">
+
+            <div class="table-wrap">
+
+              <table>
+
+                <thead>
+
+                  <tr>
+
+                    <th>Produto</th>
+
+                    <th>Lote</th>
+
+                    <th>Validade</th>
+
+                    <th>Quantidade</th>
+
+                    <th>Status</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody id="validadeBody">
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================== -->
+        <!-- USUÁRIOS -->
+        <!-- ===================================================== -->
+
+        <section
+          id="page-usuarios"
+          class="page hidden"
+        >
+
+          <h1 class="page-title">
+            Usuários
+          </h1>
+
+          <div class="notice">
+            Os usuários são criados pelo Firebase Authentication e recebem o perfil na coleção <b>usuarios</b>.
+          </div>
+
+          <div class="panel">
+
+            <div class="table-wrap">
+
+              <table>
+
+                <thead>
+
+                  <tr>
+
+                    <th>Nome</th>
+
+                    <th>E-mail</th>
+
+                    <th>Perfil</th>
+
+                    <th>Ativo</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody id="usuariosBody">
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+      </div>
+
+    </main>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- MODAL DO LEITOR DE CÂMERA -->
+  <!-- ===================================================== -->
+
+  <div
+    id="scannerModal"
+    class="scanner-modal hidden"
+  >
+
+    <div class="scanner-box">
+
+      <div class="scanner-head">
+
+        <div>
+
+          <h3>
+            📷 Leitor de código de barras
+          </h3>
+
+          <p>
+            Aponte a câmera traseira para o código da embalagem.
+          </p>
+
         </div>
-      </section>
+
+        <button
+          type="button"
+          id="btnFecharScanner"
+          class="btn btn-danger"
+        >
+          ✕ Fechar
+        </button>
+
+      </div>
+
+
+      <div class="scanner-video-wrap">
+
+        <video
+          id="scannerVideo"
+          autoplay
+          muted
+          playsinline
+        >
+        </video>
+
+        <div class="scanner-mira">
+
+          <div class="scanner-linha">
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="scannerStatus"
+        class="scanner-status"
+      >
+        Preparando câmera...
+      </div>
 
     </div>
-  </main>
-</section>
 
-<script type="module" src="./app.js"></script>
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- JAVASCRIPT -->
+  <!-- ===================================================== -->
+
+  <script
+    type="module"
+    src="./app.js"
+  ></script>
+
 </body>
+
 </html>
