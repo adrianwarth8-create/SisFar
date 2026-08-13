@@ -38,6 +38,7 @@ import {
   runTransaction
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
+alert("IMPORTS OK");
 
 // =========================================================
 // VARIÁVEIS
