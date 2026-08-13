@@ -15,6 +15,15 @@
     rel="stylesheet"
     href="./style.css"
   >
+
+  <!-- ===================================================== -->
+  <!-- ZXING - LEITOR DE CÓDIGO DE BARRAS PELA CÂMERA -->
+  <!-- ===================================================== -->
+
+  <script
+    src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"
+  ></script>
+
 </head>
 
 <body>
@@ -445,7 +454,7 @@
 
                 <input
                   id="produtoCodigoBarras"
-                  inputmode="numeric"
+                  type="text"
                   autocomplete="off"
                   placeholder="Ex.: 7891234567890"
                 >
@@ -629,7 +638,8 @@
 
             <div class="notice">
 
-              Você pode localizar o produto pelo nome ou informar o código de barras.
+              Localize o produto pelo nome, digite o código,
+              utilize o leitor USB/Bluetooth ou a câmera do celular.
 
             </div>
 
@@ -642,16 +652,38 @@
 
               <div class="field">
 
-                <label>
+                <label for="entradaCodigoBarras">
                   Código de barras
                 </label>
 
-                <input
-                  id="entradaCodigoBarras"
-                  inputmode="numeric"
-                  autocomplete="off"
-                  placeholder="Digite ou leia o código de barras"
-                >
+
+                <div class="barcode-field">
+
+                  <input
+                    id="entradaCodigoBarras"
+                    type="text"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    placeholder="Digite ou use o leitor"
+                    data-barcode-input="entrada"
+                  >
+
+
+                  <button
+                    type="button"
+                    id="btnScanEntrada"
+                    class="btn btn-secondary btn-scan"
+                  >
+                    📷 Câmera
+                  </button>
+
+                </div>
+
+
+                <small class="barcode-help">
+                  🔌 USB/Bluetooth: selecione o campo e passe o código no leitor.
+                </small>
 
               </div>
 
@@ -796,16 +828,38 @@
 
               <div class="field">
 
-                <label>
+                <label for="baixaCodigoBarras">
                   Código de barras
                 </label>
 
-                <input
-                  id="baixaCodigoBarras"
-                  inputmode="numeric"
-                  autocomplete="off"
-                  placeholder="Digite ou leia o código de barras"
-                >
+
+                <div class="barcode-field">
+
+                  <input
+                    id="baixaCodigoBarras"
+                    type="text"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    placeholder="Digite ou use o leitor"
+                    data-barcode-input="baixa"
+                  >
+
+
+                  <button
+                    type="button"
+                    id="btnScanBaixa"
+                    class="btn btn-secondary btn-scan"
+                  >
+                    📷 Câmera
+                  </button>
+
+                </div>
+
+
+                <small class="barcode-help">
+                  🔌 USB/Bluetooth: selecione o campo e passe o código no leitor.
+                </small>
 
               </div>
 
@@ -1549,6 +1603,87 @@
     </main>
 
   </section>
+
+
+  <!-- ===================================================== -->
+  <!-- MODAL - LEITOR PELA CÂMERA -->
+  <!-- ===================================================== -->
+
+  <div
+    id="scannerModal"
+    class="scanner-modal hidden"
+  >
+
+    <div class="scanner-box">
+
+
+      <div class="scanner-head">
+
+        <div>
+
+          <h3>
+            📷 Leitor de código de barras
+          </h3>
+
+          <p>
+            Aponte a câmera traseira para o código da embalagem.
+          </p>
+
+        </div>
+
+
+        <button
+          type="button"
+          id="btnFecharScanner"
+          class="btn btn-danger"
+        >
+          ✕ Fechar
+        </button>
+
+      </div>
+
+
+      <div class="scanner-video-wrap">
+
+
+        <video
+          id="scannerVideo"
+          autoplay
+          muted
+          playsinline
+        >
+        </video>
+
+
+        <div class="scanner-mira">
+
+          <div class="scanner-linha">
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+      <div
+        id="scannerStatus"
+        class="scanner-status"
+      >
+        Preparando câmera...
+      </div>
+
+
+      <div class="scanner-help">
+
+        Mantenha o código centralizado e evite reflexos na embalagem.
+
+      </div>
+
+
+    </div>
+
+  </div>
 
 
   <!-- ===================================================== -->
