@@ -1,28 +1,10 @@
-alert("APP.JS CARREGOU");
-
-// =========================================================
-// SISFAR V2
-// APP.JS
-// Sistema Integrado de Controle de Estoque de Farmácia
-// =========================================================
-
-
-// =========================================================
-// FIREBASE
-// =========================================================
-
-import {
-  auth,
-  db
-} from "./firebase.js";
-
+import { auth, db } from "./firebase.js";
 
 import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-
 
 import {
   collection,
@@ -38,72 +20,20 @@ import {
   runTransaction
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-alert("IMPORTS OK");
-
-// =========================================================
-// VARIÁVEIS
-// =========================================================
-
 let usuarioAtual = null;
-
 let produtosCache = [];
-
 let lotesCache = [];
-
 let movimentosCache = [];
 
-let usuariosCache = [];
+const $ = (id) => document.getElementById(id);
+
+const loginScreen = $("loginScreen");
+const appScreen = $("appScreen");
 
 
-let relatorioAtual = {
+function showMsg(el, texto, tipo = "error") {
 
-  titulo: "",
-
-  tipo: "",
-
-  registros: [],
-
-  totalQuantidade: 0,
-
-  totalEntradas: 0,
-
-  totalSaidas: 0
-
-};
-
-
-// =========================================================
-// ATALHO PARA ELEMENTOS
-// =========================================================
-
-const $ = (id) =>
-  document.getElementById(id);
-
-
-const loginScreen =
-  $("loginScreen");
-
-
-const appScreen =
-  $("appScreen");
-
-
-// =========================================================
-// MENSAGENS
-// =========================================================
-
-function showMsg(
-  el,
-  texto,
-  tipo = "error"
-) {
-
-  if (!el) return;
-
-
-  el.textContent =
-    texto;
-
+  el.textContent = texto;
 
   el.className =
     `message ${tipo}`;
@@ -113,12 +43,7 @@ function showMsg(
 
 function hideMsg(el) {
 
-  if (!el) return;
-
-
-  el.textContent =
-    "";
-
+  el.textContent = "";
 
   el.className =
     "message hidden";
@@ -126,15 +51,9 @@ function hideMsg(el) {
 }
 
 
-// =========================================================
-// SEGURANÇA DE TEXTO
-// =========================================================
+function esc(v = "") {
 
-function esc(
-  valor = ""
-) {
-
-  return String(valor)
+  return String(v)
 
     .replaceAll(
       "&",
@@ -164,98 +83,7 @@ function esc(
 }
 
 
-// =========================================================
-// CÓDIGO DE BARRAS
-// =========================================================
-
-function normalizarCodigoBarras(
-  valor
-) {
-
-  return String(
-    valor
-    ||
-    ""
-  )
-    .trim()
-    .replace(/\s+/g, "");
-
-}
-
-
-function encontrarProdutoPorCodigo(
-  codigo
-) {
-
-  const codigoNormalizado =
-    normalizarCodigoBarras(
-      codigo
-    );
-
-
-  if (
-    !codigoNormalizado
-  ) {
-
-    return null;
-
-  }
-
-
-  return produtosCache.find(
-    produto =>
-
-      normalizarCodigoBarras(
-        produto.codigoBarras
-      )
-      ===
-      codigoNormalizado
-
-  )
-  ||
-  null;
-
-}
-
-
-function codigoMovimentacao(
-  movimento
-) {
-
-  if (
-    movimento.codigoBarras
-  ) {
-
-    return movimento.codigoBarras;
-
-  }
-
-
-  const produto =
-    produtosCache.find(
-      p =>
-        p.id
-        ===
-        movimento.produtoId
-    );
-
-
-  return (
-    produto?.codigoBarras
-    ||
-    "-"
-  );
-
-}
-
-
-// =========================================================
-// DATAS
-// =========================================================
-
-function formatDateBR(
-  value
-) {
+function formatDateBR(value) {
 
   if (!value) {
 
@@ -270,31 +98,24 @@ function formatDateBR(
     "string"
   ) {
 
-    const partes =
-      value.split("-");
+    const [
+      y,
+      m,
+      d
+    ] = value.split("-");
 
 
-    if (
-      partes.length
-      ===
-      3
-    ) {
+    return (
+      y
+      &&
+      m
+      &&
+      d
+    )
 
-      const [
-        ano,
-        mes,
-        dia
-      ] = partes;
+      ? `${d}/${m}/${y}`
 
-
-      return (
-        `${dia}/${mes}/${ano}`
-      );
-
-    }
-
-
-    return value;
+      : value;
 
   }
 
@@ -317,50 +138,7 @@ function formatDateBR(
 }
 
 
-function formatarDataHora(
-  timestamp
-) {
-
-  if (
-    timestamp?.toDate
-  ) {
-
-    return timestamp
-      .toDate()
-      .toLocaleString(
-        "pt-BR"
-      );
-
-  }
-
-
-  return "-";
-
-}
-
-
-function timestampParaData(
-  timestamp
-) {
-
-  if (
-    !timestamp?.toDate
-  ) {
-
-    return null;
-
-  }
-
-
-  return timestamp
-    .toDate();
-
-}
-
-
-function diasAte(
-  dataISO
-) {
+function diasAte(dataISO) {
 
   if (!dataISO) {
 
@@ -412,15 +190,9 @@ function diasAte(
 }
 
 
-// =========================================================
-// PERFIS
-// =========================================================
+function perfilLabel(p) {
 
-function perfilLabel(
-  perfil
-) {
-
-  const perfis = {
+  return ({
 
     gestor:
       "Gestor",
@@ -431,16 +203,11 @@ function perfilLabel(
     consulta:
       "Consulta"
 
-  };
+  })[p]
 
+  ||
 
-  return (
-    perfis[perfil]
-    ||
-    perfil
-    ||
-    "-"
-  );
+  p;
 
 }
 
@@ -471,10 +238,6 @@ function isGestor() {
 }
 
 
-// =========================================================
-// PERMISSÕES
-// =========================================================
-
 function aplicarPermissoes() {
 
   document
@@ -482,14 +245,15 @@ function aplicarPermissoes() {
       ".gestor-only"
     )
     .forEach(
-      elemento => {
+      el => {
 
-        elemento
-          .classList
-          .toggle(
-            "hidden",
-            !isGestor()
-          );
+        el.classList.toggle(
+
+          "hidden",
+
+          !isGestor()
+
+        );
 
       }
     );
@@ -500,14 +264,15 @@ function aplicarPermissoes() {
       ".perm-operacao"
     )
     .forEach(
-      elemento => {
+      el => {
 
-        elemento
-          .classList
-          .toggle(
-            "hidden",
-            !podeOperar()
-          );
+        el.classList.toggle(
+
+          "hidden",
+
+          !podeOperar()
+
+        );
 
       }
     );
@@ -515,16 +280,12 @@ function aplicarPermissoes() {
 }
 
 
-// =========================================================
-// LOGIN
-// =========================================================
-
 $("loginForm")
-  ?.addEventListener(
+  .addEventListener(
     "submit",
-    async (event) => {
+    async (e) => {
 
-      event.preventDefault();
+      e.preventDefault();
 
 
       hideMsg(
@@ -557,16 +318,18 @@ $("loginForm")
 
       }
 
-      catch (erro) {
+      catch (err) {
 
-        console.error(erro);
+        console.error(
+          err
+        );
 
 
         showMsg(
 
           $("loginMsg"),
 
-          "Não foi possível entrar. Verifique o e-mail e a senha."
+          "Não foi possível entrar. Verifique e-mail, senha e se o acesso por E-mail/Senha está ativado."
 
         );
 
@@ -576,12 +339,8 @@ $("loginForm")
   );
 
 
-// =========================================================
-// LOGOUT
-// =========================================================
-
 $("logoutBtn")
-  ?.addEventListener(
+  .addEventListener(
     "click",
     async () => {
 
@@ -592,10 +351,6 @@ $("logoutBtn")
     }
   );
 
-
-// =========================================================
-// AUTENTICAÇÃO
-// =========================================================
 
 onAuthStateChanged(
 
@@ -610,14 +365,14 @@ onAuthStateChanged(
 
 
       loginScreen
-        ?.classList
+        .classList
         .remove(
           "hidden"
         );
 
 
       appScreen
-        ?.classList
+        .classList
         .add(
           "hidden"
         );
@@ -630,21 +385,19 @@ onAuthStateChanged(
 
     try {
 
-      const usuarioRef =
-        doc(
-
-          db,
-
-          "usuarios",
-
-          user.uid
-
-        );
-
-
       const snap =
         await getDoc(
-          usuarioRef
+
+          doc(
+
+            db,
+
+            "usuarios",
+
+            user.uid
+
+          )
+
         );
 
 
@@ -661,7 +414,7 @@ onAuthStateChanged(
 
           $("loginMsg"),
 
-          "Usuário autenticado, porém não existe perfil cadastrado na coleção usuarios."
+          `Usuário autenticado, mas não existe cadastro de perfil em usuarios/${user.uid}. Crie esse documento no Firestore.`
 
         );
 
@@ -731,14 +484,14 @@ onAuthStateChanged(
 
 
       loginScreen
-        ?.classList
+        .classList
         .add(
           "hidden"
         );
 
 
       appScreen
-        ?.classList
+        .classList
         .remove(
           "hidden"
         );
@@ -753,16 +506,23 @@ onAuthStateChanged(
 
     }
 
-    catch (erro) {
+    catch (err) {
 
-      console.error(erro);
+      console.error(
+        err
+      );
+
+
+      await signOut(
+        auth
+      );
 
 
       showMsg(
 
         $("loginMsg"),
 
-        "Erro ao carregar o perfil do usuário."
+        "Erro ao carregar o perfil. Verifique as regras do Firestore."
 
       );
 
@@ -773,23 +533,19 @@ onAuthStateChanged(
 );
 
 
-// =========================================================
-// MENU
-// =========================================================
-
 document
   .querySelectorAll(
     ".nav-btn[data-page]"
   )
   .forEach(
-    botao => {
+    btn => {
 
-      botao.addEventListener(
+      btn.addEventListener(
         "click",
         () => {
 
           abrirPagina(
-            botao.dataset.page
+            btn.dataset.page
           );
 
         }
@@ -799,22 +555,17 @@ document
   );
 
 
-function abrirPagina(
-  page
-) {
+function abrirPagina(page) {
 
   document
     .querySelectorAll(
       ".page"
     )
     .forEach(
-      pagina => {
-
-        pagina.classList.add(
+      p =>
+        p.classList.add(
           "hidden"
-        );
-
-      }
+        )
     );
 
 
@@ -824,11 +575,15 @@ function abrirPagina(
     );
 
 
-  destino
-    ?.classList
-    .remove(
-      "hidden"
-    );
+  if (destino) {
+
+    destino
+      .classList
+      .remove(
+        "hidden"
+      );
+
+  }
 
 
   document
@@ -836,13 +591,13 @@ function abrirPagina(
       ".nav-btn[data-page]"
     )
     .forEach(
-      botao => {
+      b => {
 
-        botao.classList.toggle(
+        b.classList.toggle(
 
           "active",
 
-          botao.dataset.page
+          b.dataset.page
           ===
           page
 
@@ -852,7 +607,7 @@ function abrirPagina(
     );
 
 
-  const titulos = {
+  const labels = {
 
     dashboard:
       "Dashboard",
@@ -872,26 +627,17 @@ function abrirPagina(
     validade:
       "Lotes e Validades",
 
-    relatorios:
-      "Relatórios",
-
     usuarios:
       "Usuários"
 
   };
 
 
-  if (
-    $("pageHeader")
-  ) {
-
-    $("pageHeader")
-      .textContent =
-      titulos[page]
-      ||
-      "SISFAR V2";
-
-  }
+  $("pageHeader")
+    .textContent =
+    labels[page]
+    ||
+    "SISFAR V2";
 
 
   if (
@@ -963,17 +709,6 @@ function abrirPagina(
   if (
     page
     ===
-    "relatorios"
-  ) {
-
-    inicializarRelatorios();
-
-  }
-
-
-  if (
-    page
-    ===
     "usuarios"
     &&
     isGestor()
@@ -985,10 +720,6 @@ function abrirPagina(
 
 }
 
-
-// =========================================================
-// CARREGAMENTO
-// =========================================================
 
 async function carregarTudo() {
 
@@ -1016,10 +747,6 @@ async function carregarTudo() {
 }
 
 
-// =========================================================
-// PRODUTOS
-// =========================================================
-
 async function carregarProdutos() {
 
   const snap =
@@ -1037,12 +764,12 @@ async function carregarProdutos() {
     snap.docs
 
       .map(
-        documento => ({
+        d => ({
 
           id:
-            documento.id,
+            d.id,
 
-          ...documento.data()
+          ...d.data()
 
         })
       )
@@ -1064,15 +791,10 @@ async function carregarProdutos() {
               "pt-BR"
 
             )
-
       );
 
 }
 
-
-// =========================================================
-// LOTES
-// =========================================================
 
 async function carregarLotes() {
 
@@ -1089,12 +811,12 @@ async function carregarLotes() {
 
   lotesCache =
     snap.docs.map(
-      documento => ({
+      d => ({
 
         id:
-          documento.id,
+          d.id,
 
-        ...documento.data()
+        ...d.data()
 
       })
     );
@@ -1102,15 +824,11 @@ async function carregarLotes() {
 }
 
 
-// =========================================================
-// MOVIMENTAÇÕES
-// =========================================================
-
 async function carregarMovimentacoes() {
 
   try {
 
-    const consulta =
+    const q =
       query(
 
         collection(
@@ -1128,29 +846,32 @@ async function carregarMovimentacoes() {
 
     const snap =
       await getDocs(
-        consulta
+        q
       );
 
 
     movimentosCache =
       snap.docs.map(
-        documento => ({
+        d => ({
 
           id:
-            documento.id,
+            d.id,
 
-          ...documento.data()
+          ...d.data()
 
         })
       );
 
   }
 
-  catch (erro) {
+  catch (err) {
 
     console.warn(
-      "Carregando movimentações sem ordenação.",
-      erro
+
+      "Fallback sem orderBy:",
+
+      err
+
     );
 
 
@@ -1167,12 +888,12 @@ async function carregarMovimentacoes() {
 
     movimentosCache =
       snap.docs.map(
-        documento => ({
+        d => ({
 
           id:
-            documento.id,
+            d.id,
 
-          ...documento.data()
+          ...d.data()
 
         })
       );
@@ -1181,22 +902,22 @@ async function carregarMovimentacoes() {
     movimentosCache.sort(
       (a, b) => {
 
-        const dataA =
+        const ad =
           a.criadoEm?.seconds
           ||
           0;
 
 
-        const dataB =
+        const bd =
           b.criadoEm?.seconds
           ||
           0;
 
 
         return (
-          dataB
+          bd
           -
-          dataA
+          ad
         );
 
       }
@@ -1207,35 +928,27 @@ async function carregarMovimentacoes() {
 }
 
 
-// =========================================================
-// TOTAL POR PRODUTO
-// =========================================================
-
-function totalProduto(
-  produtoId
-) {
+function totalProduto(produtoId) {
 
   return lotesCache
 
     .filter(
-      lote =>
-
-        lote.produtoId
+      l =>
+        l.produtoId
         ===
         produtoId
-
     )
 
     .reduce(
       (
-        total,
-        lote
+        s,
+        l
       ) =>
 
-        total
+        s
         +
         Number(
-          lote.quantidade
+          l.quantidade
           ||
           0
         ),
@@ -1246,23 +959,19 @@ function totalProduto(
 }
 
 
-// =========================================================
-// DASHBOARD
-// =========================================================
-
 function renderDashboard() {
 
-  const quantidadeTotal =
+  const totalQtd =
     lotesCache.reduce(
       (
-        total,
-        lote
+        s,
+        l
       ) =>
 
-        total
+        s
         +
         Number(
-          lote.quantidade
+          l.quantidade
           ||
           0
         ),
@@ -1271,39 +980,39 @@ function renderDashboard() {
     );
 
 
-  const estoqueBaixo =
+  const baixos =
     produtosCache.filter(
-      produto =>
+      p =>
 
         totalProduto(
-          produto.id
+          p.id
         )
 
         <=
 
         Number(
-          produto.estoqueMinimo
+          p.estoqueMinimo
           ||
           0
         )
-
-    );
+    )
+    .length;
 
 
   const vencendo =
     lotesCache.filter(
-      lote => {
+      l => {
 
-        const dias =
+        const d =
           diasAte(
-            lote.validade
+            l.validade
           );
 
 
         return (
 
           Number(
-            lote.quantidade
+            l.quantidade
             ||
             0
           )
@@ -1312,20 +1021,21 @@ function renderDashboard() {
 
           &&
 
-          dias
+          d
           >=
           0
 
           &&
 
-          dias
+          d
           <=
           90
 
         );
 
       }
-    );
+    )
+    .length;
 
 
   $("statProdutos")
@@ -1335,86 +1045,81 @@ function renderDashboard() {
 
   $("statQuantidade")
     .textContent =
-    quantidadeTotal;
+    totalQtd;
 
 
   $("statBaixo")
     .textContent =
-    estoqueBaixo.length;
+    baixos;
 
 
   $("statVencendo")
     .textContent =
-    vencendo.length;
+    vencendo;
 
 
   const alertas =
     lotesCache
 
       .filter(
-        lote => {
+        l => {
 
-          const produto =
+          const p =
             produtosCache.find(
-              item =>
-                item.id
+              x =>
+                x.id
                 ===
-                lote.produtoId
+                l.produtoId
             );
 
 
-          const quantidade =
+          const qtd =
             Number(
-              lote.quantidade
+              l.quantidade
               ||
               0
             );
 
 
-          if (
-            quantidade
-            <=
-            0
-          ) {
-
-            return false;
-
-          }
-
-
-          const dias =
+          const venc =
             diasAte(
-              lote.validade
-            );
-
-
-          const problemaValidade =
-            dias
+              l.validade
+            )
             <=
             90;
 
 
-          const problemaEstoque =
-            produto
+          const baixo =
+            p
+
               ?
               totalProduto(
-                produto.id
+                p.id
               )
               <=
               Number(
-                produto.estoqueMinimo
+                p.estoqueMinimo
                 ||
                 0
               )
+
               :
               false;
 
 
           return (
 
-            problemaValidade
-            ||
-            problemaEstoque
+            qtd
+            >
+            0
+
+            &&
+
+            (
+              venc
+              ||
+              baixo
+            )
 
           );
 
@@ -1430,182 +1135,169 @@ function renderDashboard() {
             "9999"
           )
             .localeCompare(
+
               b.validade
               ||
               "9999"
-            )
 
+            )
       );
 
 
-  if (
-    !alertas.length
-  ) {
+  $("dashboardAlertas")
+    .innerHTML =
 
-    $("dashboardAlertas")
-      .innerHTML = `
+    alertas.length
+
+      ?
+
+      alertas.map(
+        l => {
+
+          const p =
+            produtosCache.find(
+              x =>
+                x.id
+                ===
+                l.produtoId
+            );
+
+
+          const d =
+            diasAte(
+              l.validade
+            );
+
+
+          let badge =
+            '<span class="badge ok">Normal</span>';
+
+
+          if (
+            d
+            <
+            0
+          ) {
+
+            badge =
+              '<span class="badge danger">Vencido</span>';
+
+          }
+
+          else if (
+            d
+            <=
+            30
+          ) {
+
+            badge =
+              '<span class="badge danger">Vence em até 30 dias</span>';
+
+          }
+
+          else if (
+            d
+            <=
+            90
+          ) {
+
+            badge =
+              '<span class="badge warning">Vence em até 90 dias</span>';
+
+          }
+
+          else if (
+            p
+            &&
+            totalProduto(
+              p.id
+            )
+            <=
+            Number(
+              p.estoqueMinimo
+              ||
+              0
+            )
+          ) {
+
+            badge =
+              '<span class="badge warning">Estoque baixo</span>';
+
+          }
+
+
+          return `
+
+            <tr>
+
+              <td>
+                ${esc(
+                  p?.nome
+                  ||
+                  "Produto não encontrado"
+                )}
+              </td>
+
+              <td>
+                ${esc(
+                  l.lote
+                  ||
+                  "-"
+                )}
+              </td>
+
+              <td>
+                ${formatDateBR(
+                  l.validade
+                )}
+              </td>
+
+              <td>
+                ${Number(
+                  l.quantidade
+                  ||
+                  0
+                )}
+              </td>
+
+              <td>
+                ${badge}
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      )
+      .join("")
+
+      :
+
+      `
 
         <tr>
 
           <td colspan="5">
-
             Nenhum alerta no momento.
-
           </td>
 
         </tr>
 
       `;
 
-
-    return;
-
-  }
-
-
-  $("dashboardAlertas")
-    .innerHTML =
-    alertas.map(
-      lote => {
-
-        const produto =
-          produtosCache.find(
-            item =>
-              item.id
-              ===
-              lote.produtoId
-          );
-
-
-        const dias =
-          diasAte(
-            lote.validade
-          );
-
-
-        let badge =
-          '<span class="badge ok">Normal</span>';
-
-
-        if (
-          dias
-          <
-          0
-        ) {
-
-          badge =
-            '<span class="badge danger">Vencido</span>';
-
-        }
-
-        else if (
-          dias
-          <=
-          30
-        ) {
-
-          badge =
-            '<span class="badge danger">Vence em até 30 dias</span>';
-
-        }
-
-        else if (
-          dias
-          <=
-          90
-        ) {
-
-          badge =
-            '<span class="badge warning">Vence em até 90 dias</span>';
-
-        }
-
-        else if (
-          produto
-          &&
-          totalProduto(
-            produto.id
-          )
-          <=
-          Number(
-            produto.estoqueMinimo
-            ||
-            0
-          )
-        ) {
-
-          badge =
-            '<span class="badge warning">Estoque baixo</span>';
-
-        }
-
-
-        return `
-
-          <tr>
-
-            <td>
-              ${esc(
-                produto?.nome
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                lote.lote
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${formatDateBR(
-                lote.validade
-              )}
-            </td>
-
-            <td>
-              ${Number(
-                lote.quantidade
-                ||
-                0
-              )}
-            </td>
-
-            <td>
-              ${badge}
-            </td>
-
-          </tr>
-
-        `;
-
-      }
-    )
-    .join("");
-
 }
 
 
-// =========================================================
-// ATUALIZAR DASHBOARD
-// =========================================================
-
 $("refreshDashboard")
-  ?.addEventListener(
+  .addEventListener(
     "click",
     carregarTudo
   );
 
 
-// =========================================================
-// NOVO PRODUTO
-// =========================================================
-
 $("btnNovoProduto")
-  ?.addEventListener(
+  .addEventListener(
     "click",
     () => {
 
@@ -1647,12 +1339,8 @@ $("btnNovoProduto")
   );
 
 
-// =========================================================
-// CANCELAR PRODUTO
-// =========================================================
-
 $("cancelProduto")
-  ?.addEventListener(
+  .addEventListener(
     "click",
     () => {
 
@@ -1666,16 +1354,12 @@ $("cancelProduto")
   );
 
 
-// =========================================================
-// SALVAR PRODUTO
-// =========================================================
-
 $("produtoForm")
-  ?.addEventListener(
+  .addEventListener(
     "submit",
-    async (event) => {
+    async (e) => {
 
-      event.preventDefault();
+      e.preventDefault();
 
 
       if (
@@ -1692,62 +1376,12 @@ $("produtoForm")
           .value;
 
 
-      const codigoBarras =
-        normalizarCodigoBarras(
-          $("produtoCodigoBarras")
-            .value
-        );
-
-
-      if (
-        codigoBarras
-      ) {
-
-        const duplicado =
-          produtosCache.find(
-            produto =>
-
-              normalizarCodigoBarras(
-                produto.codigoBarras
-              )
-              ===
-              codigoBarras
-
-              &&
-
-              produto.id
-              !==
-              id
-
-          );
-
-
-        if (
-          duplicado
-        ) {
-
-          alert(
-
-            `Este código de barras já pertence ao produto: ${duplicado.nome}.`
-
-          );
-
-
-          return;
-
-        }
-
-      }
-
-
       const dados = {
 
         nome:
           $("produtoNome")
             .value
             .trim(),
-
-        codigoBarras,
 
         apresentacao:
           $("produtoApresentacao")
@@ -1850,9 +1484,11 @@ $("produtoForm")
 
       }
 
-      catch (erro) {
+      catch (err) {
 
-        console.error(erro);
+        console.error(
+          err
+        );
 
 
         alert(
@@ -1864,10 +1500,6 @@ $("produtoForm")
     }
   );
 
-
-// =========================================================
-// EDITAR PRODUTO
-// =========================================================
 
 window.editarProduto =
   (id) => {
@@ -1881,18 +1513,16 @@ window.editarProduto =
     }
 
 
-    const produto =
+    const p =
       produtosCache.find(
-        item =>
-          item.id
+        x =>
+          x.id
           ===
           id
       );
 
 
-    if (
-      !produto
-    ) {
+    if (!p) {
 
       return;
 
@@ -1901,40 +1531,33 @@ window.editarProduto =
 
     $("produtoId")
       .value =
-      produto.id;
+      p.id;
 
 
     $("produtoNome")
       .value =
-      produto.nome
-      ||
-      "";
-
-
-    $("produtoCodigoBarras")
-      .value =
-      produto.codigoBarras
+      p.nome
       ||
       "";
 
 
     $("produtoApresentacao")
       .value =
-      produto.apresentacao
+      p.apresentacao
       ||
       "";
 
 
     $("produtoCategoria")
       .value =
-      produto.categoria
+      p.categoria
       ||
       "";
 
 
     $("produtoUnidade")
       .value =
-      produto.unidade
+      p.unidade
       ||
       "";
 
@@ -1942,7 +1565,7 @@ window.editarProduto =
     $("produtoMinimo")
       .value =
       Number(
-        produto.estoqueMinimo
+        p.estoqueMinimo
         ||
         0
       );
@@ -1950,7 +1573,7 @@ window.editarProduto =
 
     $("produtoLocalizacao")
       .value =
-      produto.localizacao
+      p.localizacao
       ||
       "";
 
@@ -1980,10 +1603,6 @@ window.editarProduto =
   };
 
 
-// =========================================================
-// EXCLUIR PRODUTO
-// =========================================================
-
 window.excluirProduto =
   async (id) => {
 
@@ -1996,28 +1615,24 @@ window.excluirProduto =
     }
 
 
-    const possuiEstoque =
+    if (
       lotesCache.some(
-        lote =>
+        l =>
 
-          lote.produtoId
+          l.produtoId
           ===
           id
 
           &&
 
           Number(
-            lote.quantidade
+            l.quantidade
             ||
             0
           )
           >
           0
-      );
-
-
-    if (
-      possuiEstoque
+      )
     ) {
 
       alert(
@@ -2032,7 +1647,7 @@ window.excluirProduto =
 
     if (
       !confirm(
-        "Deseja realmente excluir este produto?"
+        "Excluir este produto?"
       )
     ) {
 
@@ -2057,17 +1672,17 @@ window.excluirProduto =
       await carregarProdutos();
 
 
-      preencherSelectProdutos();
-
       renderEstoque();
 
       renderDashboard();
 
     }
 
-    catch (erro) {
+    catch (err) {
 
-      console.error(erro);
+      console.error(
+        err
+      );
 
 
       alert(
@@ -2079,264 +1694,221 @@ window.excluirProduto =
   };
 
 
-// =========================================================
-// ESTOQUE
-// =========================================================
-
 function renderEstoque() {
-
-  if (
-    !$("estoqueBody")
-  ) {
-
-    return;
-
-  }
-
 
   const busca =
     $("searchProduto")
-      ?.value
+      .value
       .trim()
-      .toLowerCase()
-    ||
-    "";
+      .toLowerCase();
 
 
   const lista =
     produtosCache.filter(
-      produto => {
+      p =>
 
-        const texto = [
+        [
 
-          produto.nome,
+          p.nome,
 
-          produto.codigoBarras,
+          p.apresentacao,
 
-          produto.apresentacao,
+          p.categoria,
 
-          produto.categoria,
-
-          produto.localizacao,
-
-          produto.unidade
+          p.localizacao
 
         ]
           .join(" ")
-          .toLowerCase();
-
-
-        return texto.includes(
-          busca
-        );
-
-      }
+          .toLowerCase()
+          .includes(
+            busca
+          )
     );
 
 
-  if (
-    !lista.length
-  ) {
+  $("estoqueBody")
+    .innerHTML =
 
-    $("estoqueBody")
-      .innerHTML = `
+    lista.length
+
+      ?
+
+      lista.map(
+        p => {
+
+          const total =
+            totalProduto(
+              p.id
+            );
+
+
+          const baixo =
+            total
+            <=
+            Number(
+              p.estoqueMinimo
+              ||
+              0
+            );
+
+
+          let acoes =
+            "-";
+
+
+          if (
+            podeOperar()
+          ) {
+
+            acoes = `
+
+              <button
+                class="btn btn-secondary"
+                onclick="editarProduto('${p.id}')"
+              >
+                Editar
+              </button>
+
+            `;
+
+
+            if (
+              isGestor()
+            ) {
+
+              acoes += `
+
+                <button
+                  class="btn btn-danger"
+                  onclick="excluirProduto('${p.id}')"
+                >
+                  Excluir
+                </button>
+
+              `;
+
+            }
+
+          }
+
+
+          return `
+
+            <tr>
+
+              <td>
+                ${esc(
+                  p.nome
+                  ||
+                  "-"
+                )}
+              </td>
+
+              <td>
+                ${esc(
+                  p.apresentacao
+                  ||
+                  "-"
+                )}
+              </td>
+
+              <td>
+                ${esc(
+                  p.unidade
+                  ||
+                  "-"
+                )}
+              </td>
+
+              <td>
+                ${total}
+              </td>
+
+              <td>
+                ${Number(
+                  p.estoqueMinimo
+                  ||
+                  0
+                )}
+              </td>
+
+              <td>
+
+                ${
+                  baixo
+
+                    ?
+                    '<span class="badge warning">Baixo</span>'
+
+                    :
+                    '<span class="badge ok">Normal</span>'
+                }
+
+              </td>
+
+              <td>
+                ${acoes}
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      )
+      .join("")
+
+      :
+
+      `
 
         <tr>
 
-          <td colspan="8">
-
+          <td colspan="7">
             Nenhum produto encontrado.
-
           </td>
 
         </tr>
 
       `;
 
-
-    return;
-
-  }
-
-
-  $("estoqueBody")
-    .innerHTML =
-    lista.map(
-      produto => {
-
-        const total =
-          totalProduto(
-            produto.id
-          );
-
-
-        const baixo =
-          total
-          <=
-          Number(
-            produto.estoqueMinimo
-            ||
-            0
-          );
-
-
-        let acoes =
-          "-";
-
-
-        if (
-          podeOperar()
-        ) {
-
-          acoes = `
-
-            <button
-              class="btn btn-secondary"
-              onclick="editarProduto('${produto.id}')"
-            >
-              Editar
-            </button>
-
-          `;
-
-
-          if (
-            isGestor()
-          ) {
-
-            acoes += `
-
-              <button
-                class="btn btn-danger"
-                onclick="excluirProduto('${produto.id}')"
-              >
-                Excluir
-              </button>
-
-            `;
-
-          }
-
-        }
-
-
-        return `
-
-          <tr>
-
-            <td>
-              ${esc(
-                produto.nome
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                produto.codigoBarras
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                produto.apresentacao
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                produto.unidade
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${total}
-            </td>
-
-            <td>
-              ${Number(
-                produto.estoqueMinimo
-                ||
-                0
-              )}
-            </td>
-
-            <td>
-
-              ${
-                baixo
-                  ?
-                  '<span class="badge warning">Baixo</span>'
-                  :
-                  '<span class="badge ok">Normal</span>'
-              }
-
-            </td>
-
-            <td>
-              ${acoes}
-            </td>
-
-          </tr>
-
-        `;
-
-      }
-    )
-    .join("");
-
 }
 
 
-// =========================================================
-// PESQUISA ESTOQUE
-// =========================================================
-
 $("searchProduto")
-  ?.addEventListener(
+  .addEventListener(
     "input",
     renderEstoque
   );
 
 
-// =========================================================
-// SELECT DE PRODUTOS
-// =========================================================
-
 function preencherSelectProdutos() {
 
-  const opcoes =
+  const opts =
 
-    `
-      <option value="">
-        Selecione...
-      </option>
-    `
+    `<option value="">
+      Selecione...
+    </option>`
 
     +
 
     produtosCache.map(
-      produto => `
+      p => `
 
-        <option value="${produto.id}">
+        <option value="${p.id}">
 
           ${esc(
-            produto.nome
+            p.nome
           )}
 
           ${
-            produto.apresentacao
+            p.apresentacao
+
               ?
               ` - ${esc(
-                produto.apresentacao
+                p.apresentacao
               )}`
+
               :
               ""
           }
@@ -2348,190 +1920,27 @@ function preencherSelectProdutos() {
     .join("");
 
 
-  if (
-    $("entradaProduto")
-  ) {
-
-    $("entradaProduto")
-      .innerHTML =
-      opcoes;
-
-  }
+  $("entradaProduto")
+    .innerHTML =
+    opts;
 
 
-  if (
-    $("baixaProduto")
-  ) {
-
-    $("baixaProduto")
-      .innerHTML =
-      opcoes;
-
-  }
+  $("baixaProduto")
+    .innerHTML =
+    opts;
 
 
   preencherLotesBaixa();
 
 }
-// =========================================================
-// LOCALIZAR CÓDIGO NA ENTRADA
-// =========================================================
 
-function localizarCodigoEntrada() {
-
-  const campo =
-    $("entradaCodigoBarras");
-
-
-  if (
-    !campo
-  ) {
-
-    return;
-
-  }
-
-
-  const codigo =
-    normalizarCodigoBarras(
-      campo.value
-    );
-
-
-  if (
-    !codigo
-  ) {
-
-    return;
-
-  }
-
-
-  const produto =
-    encontrarProdutoPorCodigo(
-      codigo
-    );
-
-
-  if (
-    produto
-  ) {
-
-    $("entradaProduto")
-      .value =
-      produto.id;
-
-
-    hideMsg(
-      $("entradaMsg")
-    );
-
-  }
-
-  else {
-
-    $("entradaProduto")
-      .value =
-      "";
-
-
-    showMsg(
-
-      $("entradaMsg"),
-
-      "Código de barras não encontrado no cadastro de produtos."
-
-    );
-
-  }
-
-}
-
-
-// =========================================================
-// LEITOR USB / BLUETOOTH - ENTRADA
-// =========================================================
-
-$("entradaCodigoBarras")
-  ?.addEventListener(
-    "change",
-    localizarCodigoEntrada
-  );
-
-
-$("entradaCodigoBarras")
-  ?.addEventListener(
-    "keydown",
-    event => {
-
-      if (
-        event.key
-        ===
-        "Enter"
-      ) {
-
-        event.preventDefault();
-
-
-        localizarCodigoEntrada();
-
-      }
-
-    }
-  );
-
-
-// =========================================================
-// SELEÇÃO MANUAL NA ENTRADA
-// =========================================================
-
-$("entradaProduto")
-  ?.addEventListener(
-    "change",
-    () => {
-
-      const produtoId =
-        $("entradaProduto")
-          .value;
-
-
-      const produto =
-        produtosCache.find(
-          item =>
-            item.id
-            ===
-            produtoId
-        );
-
-
-      if (
-        produto
-        &&
-        $("entradaCodigoBarras")
-      ) {
-
-        $("entradaCodigoBarras")
-          .value =
-          produto.codigoBarras
-          ||
-          "";
-
-      }
-
-    }
-  );
-
-
-// =========================================================
-// ENTRADA DE ESTOQUE
-// =========================================================
 
 $("entradaForm")
-  ?.addEventListener(
+  .addEventListener(
     "submit",
-    async (event) => {
+    async (e) => {
 
-      event.preventDefault();
+      e.preventDefault();
 
 
       if (
@@ -2578,15 +1987,6 @@ $("entradaForm")
         0
       ) {
 
-        showMsg(
-
-          $("entradaMsg"),
-
-          "Preencha corretamente os campos obrigatórios."
-
-        );
-
-
         return;
 
       }
@@ -2594,38 +1994,18 @@ $("entradaForm")
 
       try {
 
-        const produto =
-          produtosCache.find(
-            item =>
-              item.id
-              ===
-              produtoId
-          );
-
-
-        if (
-          !produto
-        ) {
-
-          throw new Error(
-            "Produto não encontrado."
-          );
-
-        }
-
-
         const existente =
           lotesCache.find(
-            lote =>
+            l =>
 
-              lote.produtoId
+              l.produtoId
               ===
               produtoId
 
               &&
 
               String(
-                lote.lote
+                l.lote
                 ||
                 ""
               )
@@ -2639,7 +2019,7 @@ $("entradaForm")
 
               &&
 
-              lote.validade
+              l.validade
               ===
               validade
           );
@@ -2668,10 +2048,10 @@ $("entradaForm")
 
             db,
 
-            async transaction => {
+            async (tx) => {
 
               const snap =
-                await transaction.get(
+                await tx.get(
                   loteRef
                 );
 
@@ -2696,7 +2076,7 @@ $("entradaForm")
                 );
 
 
-              transaction.update(
+              tx.update(
 
                 loteRef,
 
@@ -2765,6 +2145,15 @@ $("entradaForm")
         }
 
 
+        const produto =
+          produtosCache.find(
+            p =>
+              p.id
+              ===
+              produtoId
+          );
+
+
         await addDoc(
 
           collection(
@@ -2780,12 +2169,7 @@ $("entradaForm")
             produtoId,
 
             produtoNome:
-              produto.nome
-              ||
-              "",
-
-            codigoBarras:
-              produto.codigoBarras
+              produto?.nome
               ||
               "",
 
@@ -2842,29 +2226,25 @@ $("entradaForm")
         await carregarMovimentacoes();
 
 
-        preencherSelectProdutos();
-
         renderDashboard();
 
         renderEstoque();
-
-        renderMovimentacoes();
 
         renderValidades();
 
       }
 
-      catch (erro) {
+      catch (err) {
 
-        console.error(erro);
+        console.error(
+          err
+        );
 
 
         showMsg(
 
           $("entradaMsg"),
 
-          erro.message
-          ||
           "Erro ao registrar entrada."
 
         );
@@ -2875,180 +2255,14 @@ $("entradaForm")
   );
 
 
-// =========================================================
-// LOCALIZAR CÓDIGO NA BAIXA
-// =========================================================
-
-function localizarCodigoBaixa() {
-
-  const campo =
-    $("baixaCodigoBarras");
-
-
-  if (
-    !campo
-  ) {
-
-    return;
-
-  }
-
-
-  const codigo =
-    normalizarCodigoBarras(
-      campo.value
-    );
-
-
-  if (
-    !codigo
-  ) {
-
-    return;
-
-  }
-
-
-  const produto =
-    encontrarProdutoPorCodigo(
-      codigo
-    );
-
-
-  if (
-    produto
-  ) {
-
-    $("baixaProduto")
-      .value =
-      produto.id;
-
-
-    preencherLotesBaixa();
-
-
-    hideMsg(
-      $("baixaMsg")
-    );
-
-  }
-
-  else {
-
-    $("baixaProduto")
-      .value =
-      "";
-
-
-    preencherLotesBaixa();
-
-
-    showMsg(
-
-      $("baixaMsg"),
-
-      "Código de barras não encontrado no cadastro de produtos."
-
-    );
-
-  }
-
-}
-
-
-// =========================================================
-// LEITOR USB / BLUETOOTH - BAIXA
-// =========================================================
-
-$("baixaCodigoBarras")
-  ?.addEventListener(
-    "change",
-    localizarCodigoBaixa
-  );
-
-
-$("baixaCodigoBarras")
-  ?.addEventListener(
-    "keydown",
-    event => {
-
-      if (
-        event.key
-        ===
-        "Enter"
-      ) {
-
-        event.preventDefault();
-
-
-        localizarCodigoBaixa();
-
-      }
-
-    }
-  );
-
-
-// =========================================================
-// PRODUTO MANUAL NA BAIXA
-// =========================================================
-
 $("baixaProduto")
-  ?.addEventListener(
+  .addEventListener(
     "change",
-    () => {
-
-      const produtoId =
-        $("baixaProduto")
-          .value;
-
-
-      const produto =
-        produtosCache.find(
-          item =>
-            item.id
-            ===
-            produtoId
-        );
-
-
-      if (
-        produto
-        &&
-        $("baixaCodigoBarras")
-      ) {
-
-        $("baixaCodigoBarras")
-          .value =
-          produto.codigoBarras
-          ||
-          "";
-
-      }
-
-
-      preencherLotesBaixa();
-
-    }
+    preencherLotesBaixa
   );
 
-
-// =========================================================
-// LOTES DA BAIXA
-// =========================================================
 
 function preencherLotesBaixa() {
-
-  if (
-    !$("baixaProduto")
-    ||
-    !$("baixaLote")
-  ) {
-
-    return;
-
-  }
-
 
   const produtoId =
     $("baixaProduto")
@@ -3059,22 +2273,21 @@ function preencherLotesBaixa() {
     lotesCache
 
       .filter(
-        lote =>
+        l =>
 
-          lote.produtoId
+          l.produtoId
           ===
           produtoId
 
           &&
 
           Number(
-            lote.quantidade
+            l.quantidade
             ||
             0
           )
           >
           0
-
       )
 
       .sort(
@@ -3086,57 +2299,58 @@ function preencherLotesBaixa() {
             "9999"
           )
             .localeCompare(
+
               b.validade
               ||
               "9999"
-            )
 
+            )
       );
 
 
   $("baixaLote")
     .innerHTML =
 
-    `
-      <option value="">
-        Selecione...
-      </option>
-    `
+    `<option value="">
+      Selecione...
+    </option>`
 
     +
 
     lotes.map(
       (
-        lote,
-        index
+        l,
+        i
       ) => `
 
-        <option value="${lote.id}">
+        <option value="${l.id}">
 
           ${
-            index
+            i
             ===
             0
+
               ?
               "FEFO → "
+
               :
               ""
           }
 
           ${esc(
-            lote.lote
+            l.lote
           )}
 
           |
 
           ${formatDateBR(
-            lote.validade
+            l.validade
           )}
 
           |
 
           qtd. ${Number(
-            lote.quantidade
+            l.quantidade
             ||
             0
           )}
@@ -3150,16 +2364,12 @@ function preencherLotesBaixa() {
 }
 
 
-// =========================================================
-// BAIXA
-// =========================================================
-
 $("baixaForm")
-  ?.addEventListener(
+  .addEventListener(
     "submit",
-    async (event) => {
+    async (e) => {
 
-      event.preventDefault();
+      e.preventDefault();
 
 
       if (
@@ -3198,41 +2408,12 @@ $("baixaForm")
         0
       ) {
 
-        showMsg(
-
-          $("baixaMsg"),
-
-          "Preencha corretamente os campos obrigatórios."
-
-        );
-
-
         return;
 
       }
 
 
       try {
-
-        const produto =
-          produtosCache.find(
-            item =>
-              item.id
-              ===
-              produtoId
-          );
-
-
-        if (
-          !produto
-        ) {
-
-          throw new Error(
-            "Produto não encontrado."
-          );
-
-        }
-
 
         const loteRef =
           doc(
@@ -3246,18 +2427,17 @@ $("baixaForm")
           );
 
 
-        let loteDados =
-          null;
+        let loteDados;
 
 
         await runTransaction(
 
           db,
 
-          async transaction => {
+          async (tx) => {
 
             const snap =
-              await transaction.get(
+              await tx.get(
                 loteRef
               );
 
@@ -3300,7 +2480,7 @@ $("baixaForm")
             }
 
 
-            transaction.update(
+            tx.update(
 
               loteRef,
 
@@ -3326,6 +2506,15 @@ $("baixaForm")
         );
 
 
+        const produto =
+          produtosCache.find(
+            p =>
+              p.id
+              ===
+              produtoId
+          );
+
+
         await addDoc(
 
           collection(
@@ -3341,12 +2530,7 @@ $("baixaForm")
             produtoId,
 
             produtoNome:
-              produto.nome
-              ||
-              "",
-
-            codigoBarras:
-              produto.codigoBarras
+              produto?.nome
               ||
               "",
 
@@ -3393,6 +2577,9 @@ $("baixaForm")
           .reset();
 
 
+        preencherLotesBaixa();
+
+
         showMsg(
 
           $("baixaMsg"),
@@ -3409,8 +2596,6 @@ $("baixaForm")
         await carregarMovimentacoes();
 
 
-        preencherSelectProdutos();
-
         renderDashboard();
 
         renderEstoque();
@@ -3421,16 +2606,18 @@ $("baixaForm")
 
       }
 
-      catch (erro) {
+      catch (err) {
 
-        console.error(erro);
+        console.error(
+          err
+        );
 
 
         showMsg(
 
           $("baixaMsg"),
 
-          erro.message
+          err.message
           ||
           "Erro ao registrar baixa."
 
@@ -3442,729 +2629,62 @@ $("baixaForm")
   );
 
 
-// =========================================================
-// SCANNER - CÂMERA DO CELULAR
-// =========================================================
+function dataMov(m) {
 
-let scannerControles =
-  null;
+  return m.criadoEm?.toDate
 
-let scannerDestino =
-  null;
+    ?
+    m.criadoEm
+      .toDate()
+      .toLocaleString(
+        "pt-BR"
+      )
 
-let scannerEmExecucao =
-  false;
-
-let ultimoCodigoScanner =
-  "";
-
-let ultimoCodigoScannerTempo =
-  0;
-
-
-// =========================================================
-// MOSTRAR STATUS DO SCANNER
-// =========================================================
-
-function definirStatusScanner(
-  texto
-) {
-
-  const status =
-    $("scannerStatus");
-
-
-  if (
-    status
-  ) {
-
-    status.textContent =
-      texto;
-
-  }
+    :
+    "-";
 
 }
 
-
-// =========================================================
-// FECHAR SCANNER
-// =========================================================
-
-function fecharScanner() {
-
-  scannerEmExecucao =
-    false;
-
-
-  scannerDestino =
-    null;
-
-
-  ultimoCodigoScanner =
-    "";
-
-
-  try {
-
-    scannerControles
-      ?.stop?.();
-
-  }
-
-  catch (erro) {
-
-    console.warn(
-      "Erro ao parar scanner:",
-      erro
-    );
-
-  }
-
-
-  scannerControles =
-    null;
-
-
-  const video =
-    $("scannerVideo");
-
-
-  if (
-    video
-    &&
-    video.srcObject
-  ) {
-
-    try {
-
-      video.srcObject
-        .getTracks()
-        .forEach(
-          track =>
-            track.stop()
-        );
-
-    }
-
-    catch (erro) {
-
-      console.warn(
-        "Erro ao parar câmera:",
-        erro
-      );
-
-    }
-
-
-    video.srcObject =
-      null;
-
-  }
-
-
-  $("scannerModal")
-    ?.classList
-    .add(
-      "hidden"
-    );
-
-
-  definirStatusScanner(
-    "Scanner fechado."
-  );
-
-}
-
-
-// =========================================================
-// PROCESSAR CÓDIGO LIDO PELA CÂMERA
-// =========================================================
-
-function processarCodigoScanner(
-  codigo
-) {
-
-  const codigoNormalizado =
-    normalizarCodigoBarras(
-      codigo
-    );
-
-
-  if (
-    !codigoNormalizado
-  ) {
-
-    return;
-
-  }
-
-
-  const agora =
-    Date.now();
-
-
-  if (
-    codigoNormalizado
-    ===
-    ultimoCodigoScanner
-
-    &&
-
-    agora
-    -
-    ultimoCodigoScannerTempo
-    <
-    1500
-  ) {
-
-    return;
-
-  }
-
-
-  ultimoCodigoScanner =
-    codigoNormalizado;
-
-
-  ultimoCodigoScannerTempo =
-    agora;
-
-
-  if (
-    scannerDestino
-    ===
-    "entrada"
-  ) {
-
-    const campo =
-      $("entradaCodigoBarras");
-
-
-    if (
-      campo
-    ) {
-
-      campo.value =
-        codigoNormalizado;
-
-    }
-
-
-    localizarCodigoEntrada();
-
-  }
-
-
-  else if (
-    scannerDestino
-    ===
-    "baixa"
-  ) {
-
-    const campo =
-      $("baixaCodigoBarras");
-
-
-    if (
-      campo
-    ) {
-
-      campo.value =
-        codigoNormalizado;
-
-    }
-
-
-    localizarCodigoBaixa();
-
-  }
-
-
-  if (
-    navigator.vibrate
-  ) {
-
-    navigator.vibrate(
-      120
-    );
-
-  }
-
-
-  definirStatusScanner(
-    `Código identificado: ${codigoNormalizado}`
-  );
-
-
-  setTimeout(
-    fecharScanner,
-    250
-  );
-
-}
-
-
-// =========================================================
-// ABRIR SCANNER
-// =========================================================
-
-async function abrirScanner(
-  destino
-) {
-
-  if (
-    scannerEmExecucao
-  ) {
-
-    return;
-
-  }
-
-
-  scannerDestino =
-    destino;
-
-
-  ultimoCodigoScanner =
-    "";
-
-
-  ultimoCodigoScannerTempo =
-    0;
-
-
-  const modal =
-    $("scannerModal");
-
-
-  const video =
-    $("scannerVideo");
-
-
-  if (
-    !modal
-    ||
-    !video
-  ) {
-
-    alert(
-      "O leitor de câmera não foi encontrado na página."
-    );
-
-    return;
-
-  }
-
-
-  modal.classList.remove(
-    "hidden"
-  );
-
-
-  definirStatusScanner(
-    "Solicitando acesso à câmera..."
-  );
-
-
-  try {
-
-    if (
-      !window.ZXingBrowser
-    ) {
-
-      throw new Error(
-        "Biblioteca ZXing não carregada."
-      );
-
-    }
-
-
-    scannerEmExecucao =
-      true;
-
-
-    const leitor =
-      new window.ZXingBrowser
-        .BrowserMultiFormatReader();
-
-
-    const dispositivos =
-      await window.ZXingBrowser
-        .BrowserCodeReader
-        .listVideoInputDevices();
-
-
-    if (
-      !dispositivos.length
-    ) {
-
-      throw new Error(
-        "Nenhuma câmera foi encontrada neste dispositivo."
-      );
-
-    }
-
-
-    let cameraEscolhida =
-      dispositivos[0];
-
-
-    const cameraTraseira =
-      dispositivos.find(
-        dispositivo => {
-
-          const nome =
-            (
-              dispositivo.label
-              ||
-              ""
-            )
-              .toLowerCase();
-
-
-          return (
-            nome.includes(
-              "back"
-            )
-            ||
-            nome.includes(
-              "rear"
-            )
-            ||
-            nome.includes(
-              "environment"
-            )
-            ||
-            nome.includes(
-              "traseira"
-            )
-          );
-
-        }
-      );
-
-
-    if (
-      cameraTraseira
-    ) {
-
-      cameraEscolhida =
-        cameraTraseira;
-
-    }
-
-
-    definirStatusScanner(
-      "Câmera ativa. Aponte para o código de barras."
-    );
-
-
-    scannerControles =
-      await leitor.decodeFromVideoDevice(
-
-        cameraEscolhida.deviceId,
-
-        video,
-
-        (
-          result,
-          error,
-          controls
-        ) => {
-
-          scannerControles =
-            controls;
-
-
-          if (
-            result
-          ) {
-
-            processarCodigoScanner(
-              result.getText()
-            );
-
-          }
-
-
-          if (
-            error
-            &&
-            !(
-              error.name
-              ===
-              "NotFoundException"
-            )
-          ) {
-
-            console.debug(
-              "Scanner:",
-              error
-            );
-
-          }
-
-        }
-
-      );
-
-  }
-
-  catch (erro) {
-
-    console.error(
-      "Erro ao abrir câmera:",
-      erro
-    );
-
-
-    scannerEmExecucao =
-      false;
-
-
-    let mensagemErro =
-      "Não foi possível abrir a câmera.";
-
-
-    const nome =
-      erro?.name
-      ||
-      "";
-
-
-    if (
-      nome
-      ===
-      "NotAllowedError"
-      ||
-      nome
-      ===
-      "PermissionDeniedError"
-    ) {
-
-      mensagemErro =
-        "Permissão da câmera negada. Autorize o uso da câmera no navegador e tente novamente.";
-
-    }
-
-
-    else if (
-      nome
-      ===
-      "NotFoundError"
-    ) {
-
-      mensagemErro =
-        "Nenhuma câmera foi encontrada neste dispositivo.";
-
-    }
-
-
-    else if (
-      nome
-      ===
-      "NotReadableError"
-    ) {
-
-      mensagemErro =
-        "A câmera está sendo usada por outro aplicativo.";
-
-    }
-
-
-    else if (
-      erro?.message
-    ) {
-
-      mensagemErro =
-        erro.message;
-
-    }
-
-
-    definirStatusScanner(
-      mensagemErro
-    );
-
-  }
-
-}
-
-
-// =========================================================
-// BOTÃO CÂMERA - ENTRADA
-// =========================================================
-
-$("btnScanEntrada")
-  ?.addEventListener(
-    "click",
-    () => {
-
-      abrirScanner(
-        "entrada"
-      );
-
-    }
-  );
-
-
-// =========================================================
-// BOTÃO CÂMERA - BAIXA
-// =========================================================
-
-$("btnScanBaixa")
-  ?.addEventListener(
-    "click",
-    () => {
-
-      abrirScanner(
-        "baixa"
-      );
-
-    }
-  );
-
-
-// =========================================================
-// BOTÃO FECHAR SCANNER
-// =========================================================
-
-$("btnFecharScanner")
-  ?.addEventListener(
-    "click",
-    fecharScanner
-  );
-
-
-// =========================================================
-// FECHAR AO CLICAR FORA DO BOX
-// =========================================================
-
-$("scannerModal")
-  ?.addEventListener(
-    "click",
-    event => {
-
-      if (
-        event.target
-        ===
-        $("scannerModal")
-      ) {
-
-        fecharScanner();
-
-      }
-
-    }
-  );
-
-
-// =========================================================
-// FECHAR COM ESC
-// =========================================================
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.key
-      ===
-      "Escape"
-
-      &&
-
-      scannerEmExecucao
-    ) {
-
-      fecharScanner();
-
-    }
-
-  }
-);
-
-
-// =========================================================
-// FECHAR CÂMERA AO SAIR DA PÁGINA
-// =========================================================
-
-document.addEventListener(
-  "visibilitychange",
-  () => {
-
-    if (
-      document.hidden
-      &&
-      scannerEmExecucao
-    ) {
-
-      fecharScanner();
-
-    }
-
-  }
-);
-// =========================================================
-// MOVIMENTAÇÕES
-// =========================================================
 
 function renderMovimentacoes() {
 
-  if (
-    !$("movBody")
-  ) {
-
-    return;
-
-  }
-
-
   const tipo =
     $("movTipoFiltro")
-      ?.value
-    ||
-    "";
+      .value;
 
 
   const busca =
     $("movBusca")
-      ?.value
+      .value
       .trim()
-      .toLowerCase()
-    ||
-    "";
+      .toLowerCase();
 
 
   const lista =
     movimentosCache.filter(
-      movimento => {
+      m => {
 
-        const tipoOk =
+        const okTipo =
           !tipo
           ||
-          movimento.tipo
+          m.tipo
           ===
           tipo;
 
 
         const texto = [
 
-          movimento.produtoNome,
+          m.produtoNome,
 
-          codigoMovimentacao(
-            movimento
-          ),
+          m.lote,
 
-          movimento.lote,
+          m.responsavelNome,
 
-          movimento.responsavelNome,
+          m.destino,
 
-          movimento.destino,
+          m.origem,
 
-          movimento.origem,
-
-          movimento.motivo
+          m.motivo
 
         ]
           .join(" ")
@@ -4173,7 +2693,7 @@ function renderMovimentacoes() {
 
         return (
 
-          tipoOk
+          okTipo
 
           &&
 
@@ -4187,235 +2707,124 @@ function renderMovimentacoes() {
     );
 
 
-  if (
-    !lista.length
-  ) {
+  $("movBody")
+    .innerHTML =
 
-    $("movBody")
-      .innerHTML = `
+    lista.length
+
+      ?
+
+      lista.map(
+        m => `
+
+          <tr>
+
+            <td>
+              ${dataMov(
+                m
+              )}
+            </td>
+
+            <td>
+
+              ${
+                m.tipo
+                ===
+                "entrada"
+
+                  ?
+                  '<span class="badge ok">Entrada</span>'
+
+                  :
+                  '<span class="badge info">Saída</span>'
+              }
+
+            </td>
+
+            <td>
+              ${esc(
+                m.produtoNome
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                m.lote
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${Number(
+                m.quantidade
+                ||
+                0
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                m.destino
+                ||
+                m.origem
+                ||
+                "-"
+              )}
+            </td>
+
+            <td>
+              ${esc(
+                m.responsavelNome
+                ||
+                "-"
+              )}
+            </td>
+
+          </tr>
+
+        `
+      )
+      .join("")
+
+      :
+
+      `
 
         <tr>
 
-          <td colspan="8">
-
+          <td colspan="7">
             Nenhuma movimentação encontrada.
-
           </td>
 
         </tr>
 
       `;
 
-
-    return;
-
-  }
-
-
-  $("movBody")
-    .innerHTML =
-    lista.map(
-      movimento => `
-
-        <tr>
-
-          <td>
-            ${formatarDataHora(
-              movimento.criadoEm
-            )}
-          </td>
-
-          <td>
-
-            ${
-              movimento.tipo
-              ===
-              "entrada"
-                ?
-                '<span class="badge ok">Entrada</span>'
-                :
-                '<span class="badge info">Saída</span>'
-            }
-
-          </td>
-
-          <td>
-            ${esc(
-              movimento.produtoNome
-              ||
-              "-"
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              codigoMovimentacao(
-                movimento
-              )
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              movimento.lote
-              ||
-              "-"
-            )}
-          </td>
-
-          <td>
-            ${Number(
-              movimento.quantidade
-              ||
-              0
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              movimento.destino
-              ||
-              movimento.origem
-              ||
-              "-"
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              movimento.responsavelNome
-              ||
-              "-"
-            )}
-          </td>
-
-        </tr>
-
-      `
-    )
-    .join("");
-
 }
 
 
-// =========================================================
-// FILTROS MOVIMENTAÇÕES
-// =========================================================
-
 $("movTipoFiltro")
-  ?.addEventListener(
+  .addEventListener(
     "change",
     renderMovimentacoes
   );
 
 
 $("movBusca")
-  ?.addEventListener(
+  .addEventListener(
     "input",
     renderMovimentacoes
   );
 
 
-// =========================================================
-// VALIDADES
-// =========================================================
-
-function statusValidade(
-  lote
-) {
-
-  const dias =
-    diasAte(
-      lote.validade
-    );
-
-
-  if (
-    dias
-    <
-    0
-  ) {
-
-    return {
-
-      texto:
-        "Vencido",
-
-      classe:
-        "danger"
-
-    };
-
-  }
-
-
-  if (
-    dias
-    <=
-    30
-  ) {
-
-    return {
-
-      texto:
-        "Até 30 dias",
-
-      classe:
-        "danger"
-
-    };
-
-  }
-
-
-  if (
-    dias
-    <=
-    90
-  ) {
-
-    return {
-
-      texto:
-        "Até 90 dias",
-
-      classe:
-        "warning"
-
-    };
-
-  }
-
-
-  return {
-
-    texto:
-      "Regular",
-
-    classe:
-      "ok"
-
-  };
-
-}
-
-
 function renderValidades() {
-
-  if (
-    !$("validadeBody")
-  ) {
-
-    return;
-
-  }
-
 
   const lista =
     [
-
       ...lotesCache
-
     ]
       .sort(
         (a, b) =>
@@ -4426,125 +2835,140 @@ function renderValidades() {
             "9999"
           )
             .localeCompare(
+
               b.validade
               ||
               "9999"
-            )
 
+            )
       );
 
 
-  if (
-    !lista.length
-  ) {
+  $("validadeBody")
+    .innerHTML =
 
-    $("validadeBody")
-      .innerHTML = `
+    lista.length
+
+      ?
+
+      lista.map(
+        l => {
+
+          const p =
+            produtosCache.find(
+              x =>
+                x.id
+                ===
+                l.produtoId
+            );
+
+
+          const d =
+            diasAte(
+              l.validade
+            );
+
+
+          let status =
+            '<span class="badge ok">Regular</span>';
+
+
+          if (
+            d
+            <
+            0
+          ) {
+
+            status =
+              '<span class="badge danger">Vencido</span>';
+
+          }
+
+          else if (
+            d
+            <=
+            30
+          ) {
+
+            status =
+              '<span class="badge danger">Até 30 dias</span>';
+
+          }
+
+          else if (
+            d
+            <=
+            90
+          ) {
+
+            status =
+              '<span class="badge warning">Até 90 dias</span>';
+
+          }
+
+
+          return `
+
+            <tr>
+
+              <td>
+                ${esc(
+                  p?.nome
+                  ||
+                  "-"
+                )}
+              </td>
+
+              <td>
+                ${esc(
+                  l.lote
+                  ||
+                  "-"
+                )}
+              </td>
+
+              <td>
+                ${formatDateBR(
+                  l.validade
+                )}
+              </td>
+
+              <td>
+                ${Number(
+                  l.quantidade
+                  ||
+                  0
+                )}
+              </td>
+
+              <td>
+                ${status}
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      )
+      .join("")
+
+      :
+
+      `
 
         <tr>
 
-          <td colspan="6">
-
+          <td colspan="5">
             Nenhum lote cadastrado.
-
           </td>
 
         </tr>
 
       `;
 
-
-    return;
-
-  }
-
-
-  $("validadeBody")
-    .innerHTML =
-    lista.map(
-      lote => {
-
-        const produto =
-          produtosCache.find(
-            item =>
-              item.id
-              ===
-              lote.produtoId
-          );
-
-
-        const status =
-          statusValidade(
-            lote
-          );
-
-
-        return `
-
-          <tr>
-
-            <td>
-              ${esc(
-                produto?.nome
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                produto?.codigoBarras
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                lote.lote
-                ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${formatDateBR(
-                lote.validade
-              )}
-            </td>
-
-            <td>
-              ${Number(
-                lote.quantidade
-                ||
-                0
-              )}
-            </td>
-
-            <td>
-
-              <span
-                class="badge ${status.classe}"
-              >
-                ${status.texto}
-              </span>
-
-            </td>
-
-          </tr>
-
-        `;
-
-      }
-    )
-    .join("");
-
 }
 
-
-// =========================================================
-// USUÁRIOS
-// =========================================================
 
 async function carregarUsuarios() {
 
@@ -4570,745 +2994,34 @@ async function carregarUsuarios() {
       );
 
 
-    usuariosCache =
+    const users =
       snap.docs.map(
-        documento => ({
+        d => ({
 
           id:
-            documento.id,
+            d.id,
 
-          ...documento.data()
+          ...d.data()
 
         })
       );
 
 
-    usuariosCache.sort(
-      (a, b) =>
-
-        (
-          a.nome
-          ||
-          a.email
-          ||
-          ""
-        )
-          .localeCompare(
-
-            b.nome
-            ||
-            b.email
-            ||
-            "",
-
-            "pt-BR"
-
-          )
-
-    );
-
-
-    renderUsuarios();
-
-  }
-
-  catch (erro) {
-
-    console.error(erro);
-
-
     $("usuariosBody")
-      .innerHTML = `
+      .innerHTML =
 
-        <tr>
+      users.length
 
-          <td colspan="5">
-
-            Erro ao carregar usuários.
-
-          </td>
-
-        </tr>
-
-      `;
-
-  }
-
-}
-
-
-// =========================================================
-// RENDER USUÁRIOS
-// =========================================================
-
-function renderUsuarios() {
-
-  if (
-    !$("usuariosBody")
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    !usuariosCache.length
-  ) {
-
-    $("usuariosBody")
-      .innerHTML = `
-
-        <tr>
-
-          <td colspan="5">
-
-            Nenhum usuário cadastrado.
-
-          </td>
-
-        </tr>
-
-      `;
-
-
-    return;
-
-  }
-
-
-  $("usuariosBody")
-    .innerHTML =
-    usuariosCache.map(
-      usuario => `
-
-        <tr>
-
-          <td>
-            ${esc(
-              usuario.nome
-              ||
-              "-"
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              usuario.email
-              ||
-              "-"
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              perfilLabel(
-                usuario.perfil
-              )
-            )}
-          </td>
-
-          <td>
-
-            ${
-              usuario.ativo
-              ===
-              false
-                ?
-                '<span class="badge danger">Inativo</span>'
-                :
-                '<span class="badge ok">Ativo</span>'
-            }
-
-          </td>
-
-          <td>
-
-            <button
-              class="btn btn-secondary"
-              onclick="editarUsuario('${usuario.id}')"
-            >
-              Editar
-            </button>
-
-          </td>
-
-        </tr>
-
-      `
-    )
-    .join("");
-
-}
-
-
-// =========================================================
-// EDITAR USUÁRIO
-// =========================================================
-
-window.editarUsuario =
-  (id) => {
-
-    if (
-      !isGestor()
-    ) {
-
-      return;
-
-    }
-
-
-    const usuario =
-      usuariosCache.find(
-        item =>
-          item.id
-          ===
-          id
-      );
-
-
-    if (
-      !usuario
-    ) {
-
-      return;
-
-    }
-
-
-    $("usuarioId")
-      .value =
-      usuario.id;
-
-
-    $("usuarioNome")
-      .value =
-      usuario.nome
-      ||
-      "";
-
-
-    $("usuarioEmail")
-      .value =
-      usuario.email
-      ||
-      "";
-
-
-    $("usuarioPerfil")
-      .value =
-      usuario.perfil
-      ||
-      "consulta";
-
-
-    $("usuarioAtivo")
-      .value =
-      usuario.ativo
-      ===
-      false
         ?
-        "false"
-        :
-        "true";
 
-
-    $("usuarioFormPanel")
-      .classList
-      .remove(
-        "hidden"
-      );
-
-
-    window.scrollTo({
-
-      top:
-        0,
-
-      behavior:
-        "smooth"
-
-    });
-
-  };
-
-
-// =========================================================
-// CANCELAR USUÁRIO
-// =========================================================
-
-$("cancelUsuario")
-  ?.addEventListener(
-    "click",
-    () => {
-
-      $("usuarioForm")
-        ?.reset();
-
-
-      $("usuarioFormPanel")
-        ?.classList
-        .add(
-          "hidden"
-        );
-
-    }
-  );
-
-
-// =========================================================
-// SALVAR USUÁRIO
-// =========================================================
-
-$("usuarioForm")
-  ?.addEventListener(
-    "submit",
-    async event => {
-
-      event.preventDefault();
-
-
-      if (
-        !isGestor()
-      ) {
-
-        return;
-
-      }
-
-
-      const id =
-        $("usuarioId")
-          .value;
-
-
-      const nome =
-        $("usuarioNome")
-          .value
-          .trim();
-
-
-      const perfil =
-        $("usuarioPerfil")
-          .value;
-
-
-      const ativo =
-        $("usuarioAtivo")
-          .value
-        ===
-        "true";
-
-
-      if (
-        !id
-        ||
-        !nome
-      ) {
-
-        alert(
-          "Preencha os dados do usuário."
-        );
-
-
-        return;
-
-      }
-
-
-      if (
-        id
-        ===
-        usuarioAtual.uid
-      ) {
-
-        if (
-          !ativo
-        ) {
-
-          alert(
-            "Você não pode desativar o usuário que está utilizando no momento."
-          );
-
-
-          return;
-
-        }
-
-
-        if (
-          perfil
-          !==
-          "gestor"
-        ) {
-
-          alert(
-            "Para evitar perda de acesso, você não pode retirar o perfil Gestor da sua própria conta."
-          );
-
-
-          return;
-
-        }
-
-      }
-
-
-      try {
-
-        await updateDoc(
-
-          doc(
-            db,
-            "usuarios",
-            id
-          ),
-
-          {
-
-            nome,
-
-            perfil,
-
-            ativo,
-
-            atualizadoEm:
-              serverTimestamp(),
-
-            atualizadoPor:
-              usuarioAtual.uid
-
-          }
-
-        );
-
-
-        $("usuarioFormPanel")
-          .classList
-          .add(
-            "hidden"
-          );
-
-
-        $("usuarioForm")
-          .reset();
-
-
-        await carregarUsuarios();
-
-
-        alert(
-          "Usuário atualizado com sucesso."
-        );
-
-      }
-
-      catch (erro) {
-
-        console.error(erro);
-
-
-        alert(
-          "Erro ao atualizar usuário."
-        );
-
-      }
-
-    }
-  );
-
-
-// =========================================================
-// RELATÓRIOS
-// =========================================================
-
-function inicializarRelatorios() {
-
-  if (
-    !$("relatorioTipo")
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    !relatorioAtual.tipo
-  ) {
-
-    gerarRelatorio();
-
-  }
-
-}
-
-
-// =========================================================
-// MOVIMENTO DENTRO DO PERÍODO
-// =========================================================
-
-function movimentoDentroPeriodo(
-  movimento,
-  dataInicial,
-  dataFinal
-) {
-
-  const data =
-    timestampParaData(
-      movimento.criadoEm
-    );
-
-
-  if (
-    !data
-  ) {
-
-    return (
-
-      !dataInicial
-      &&
-      !dataFinal
-
-    );
-
-  }
-
-
-  if (
-    dataInicial
-  ) {
-
-    const inicio =
-      new Date(
-        `${dataInicial}T00:00:00`
-      );
-
-
-    if (
-      data
-      <
-      inicio
-    ) {
-
-      return false;
-
-    }
-
-  }
-
-
-  if (
-    dataFinal
-  ) {
-
-    const fim =
-      new Date(
-        `${dataFinal}T23:59:59`
-      );
-
-    
-        if (
-      data
-      >
-      fim
-    ) {
-
-      return false;
-
-    }
-
-  }
-
-
-  return true;
-
-}
-
-
-// =========================================================
-// GERAR RELATÓRIO
-// =========================================================
-
-function gerarRelatorio() {
-
-  if (
-    !$("relatorioTipo")
-  ) {
-
-    return;
-
-  }
-
-
-  const tipo =
-    $("relatorioTipo")
-      .value
-    ||
-    "estoque";
-
-
-  const dataInicial =
-    $("relatorioDataInicial")
-      ?.value
-    ||
-    "";
-
-
-  const dataFinal =
-    $("relatorioDataFinal")
-      ?.value
-    ||
-    "";
-
-
-  const busca =
-    $("relatorioBusca")
-      ?.value
-      .trim()
-      .toLowerCase()
-    ||
-    "";
-
-
-  let registros =
-    [];
-
-
-  let titulo =
-    "Relatório";
-
-
-  let head =
-    "";
-
-
-  let body =
-    "";
-
-
-  let totalQuantidade =
-    0;
-
-
-  let totalEntradas =
-    0;
-
-
-  let totalSaidas =
-    0;
-
-
-  // =======================================================
-  // ESTOQUE ATUAL
-  // =======================================================
-
-  if (
-    tipo
-    ===
-    "estoque"
-  ) {
-
-    titulo =
-      "Relatório de Estoque Atual";
-
-
-    registros =
-      produtosCache
-
-        .map(
-          produto => ({
-
-            produto,
-
-            quantidade:
-              totalProduto(
-                produto.id
-              )
-
-          })
-        )
-
-        .filter(
-          item => {
-
-            const texto = [
-
-              item.produto.nome,
-
-              item.produto.codigoBarras,
-
-              item.produto.apresentacao,
-
-              item.produto.categoria,
-
-              item.produto.localizacao
-
-            ]
-              .join(" ")
-              .toLowerCase();
-
-
-            return texto.includes(
-              busca
-            );
-
-          }
-        );
-
-
-    head = `
-
-      <tr>
-
-        <th>Produto</th>
-
-        <th>Código</th>
-
-        <th>Apresentação</th>
-
-        <th>Unidade</th>
-
-        <th>Quantidade</th>
-
-        <th>Mínimo</th>
-
-        <th>Situação</th>
-
-      </tr>
-
-    `;
-
-
-    body =
-      registros.map(
-        item => {
-
-          const minimo =
-            Number(
-              item.produto.estoqueMinimo
-              ||
-              0
-            );
-
-
-          const baixo =
-            item.quantidade
-            <=
-            minimo;
-
-
-          totalQuantidade +=
-            item.quantidade;
-
-
-          return `
+        users.map(
+          u => `
 
             <tr>
 
               <td>
                 ${esc(
-                  item.produto.nome
+                  u.nome
                   ||
                   "-"
                 )}
@@ -5316,7 +3029,7 @@ function gerarRelatorio() {
 
               <td>
                 ${esc(
-                  item.produto.codigoBarras
+                  u.email
                   ||
                   "-"
                 )}
@@ -5324,1434 +3037,70 @@ function gerarRelatorio() {
 
               <td>
                 ${esc(
-                  item.produto.apresentacao
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  item.produto.unidade
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${item.quantidade}
-              </td>
-
-              <td>
-                ${minimo}
-              </td>
-
-              <td>
-
-                ${
-                  baixo
-                    ?
-                    '<span class="badge warning">Baixo</span>'
-                    :
-                    '<span class="badge ok">Normal</span>'
-                }
-
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-      .join("");
-
-  }
-
-
-  // =======================================================
-  // ESTOQUE BAIXO
-  // =======================================================
-
-  if (
-    tipo
-    ===
-    "baixo"
-  ) {
-
-    titulo =
-      "Relatório de Estoque Baixo";
-
-
-    registros =
-      produtosCache
-
-        .map(
-          produto => ({
-
-            produto,
-
-            quantidade:
-              totalProduto(
-                produto.id
-              )
-
-          })
-        )
-
-        .filter(
-          item => {
-
-            const minimo =
-              Number(
-                item.produto.estoqueMinimo
-                ||
-                0
-              );
-
-
-            const texto = [
-
-              item.produto.nome,
-
-              item.produto.codigoBarras,
-
-              item.produto.apresentacao,
-
-              item.produto.categoria
-
-            ]
-              .join(" ")
-              .toLowerCase();
-
-
-            return (
-
-              item.quantidade
-              <=
-              minimo
-
-              &&
-
-              texto.includes(
-                busca
-              )
-
-            );
-
-          }
-        );
-
-
-    head = `
-
-      <tr>
-
-        <th>Produto</th>
-
-        <th>Código</th>
-
-        <th>Apresentação</th>
-
-        <th>Quantidade atual</th>
-
-        <th>Estoque mínimo</th>
-
-        <th>Falta</th>
-
-      </tr>
-
-    `;
-
-
-    body =
-      registros.map(
-        item => {
-
-          const minimo =
-            Number(
-              item.produto.estoqueMinimo
-              ||
-              0
-            );
-
-
-          const falta =
-            Math.max(
-              minimo
-              -
-              item.quantidade,
-              0
-            );
-
-
-          totalQuantidade +=
-            item.quantidade;
-
-
-          return `
-
-            <tr>
-
-              <td>
-                ${esc(
-                  item.produto.nome
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  item.produto.codigoBarras
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  item.produto.apresentacao
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${item.quantidade}
-              </td>
-
-              <td>
-                ${minimo}
-              </td>
-
-              <td>
-                ${falta}
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-      .join("");
-
-  }
-
-
-  // =======================================================
-  // VALIDADE
-  // =======================================================
-
-  if (
-    tipo
-    ===
-    "validade"
-  ) {
-
-    titulo =
-      "Relatório de Produtos Próximos do Vencimento";
-
-
-    registros =
-      lotesCache
-
-        .filter(
-          lote => {
-
-            const produto =
-              produtosCache.find(
-                item =>
-                  item.id
-                  ===
-                  lote.produtoId
-              );
-
-
-            const dias =
-              diasAte(
-                lote.validade
-              );
-
-
-            const texto = [
-
-              produto?.nome,
-
-              produto?.codigoBarras,
-
-              lote.lote
-
-            ]
-              .join(" ")
-              .toLowerCase();
-
-
-            return (
-
-              Number(
-                lote.quantidade
-                ||
-                0
-              )
-              >
-              0
-
-              &&
-
-              dias
-              <=
-              90
-
-              &&
-
-              texto.includes(
-                busca
-              )
-
-            );
-
-          }
-        )
-
-        .sort(
-          (a, b) =>
-
-            (
-              a.validade
-              ||
-              ""
-            )
-              .localeCompare(
-                b.validade
-                ||
-                ""
-              )
-
-        );
-
-
-    head = `
-
-      <tr>
-
-        <th>Produto</th>
-
-        <th>Código</th>
-
-        <th>Lote</th>
-
-        <th>Validade</th>
-
-        <th>Quantidade</th>
-
-        <th>Status</th>
-
-      </tr>
-
-    `;
-
-
-    body =
-      registros.map(
-        lote => {
-
-          const produto =
-            produtosCache.find(
-              item =>
-                item.id
-                ===
-                lote.produtoId
-            );
-
-
-          const status =
-            statusValidade(
-              lote
-            );
-
-
-          totalQuantidade +=
-            Number(
-              lote.quantidade
-              ||
-              0
-            );
-
-
-          return `
-
-            <tr>
-
-              <td>
-                ${esc(
-                  produto?.nome
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  produto?.codigoBarras
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  lote.lote
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${formatDateBR(
-                  lote.validade
-                )}
-              </td>
-
-              <td>
-                ${Number(
-                  lote.quantidade
-                  ||
-                  0
-                )}
-              </td>
-
-              <td>
-
-                <span
-                  class="badge ${status.classe}"
-                >
-                  ${status.texto}
-                </span>
-
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-      .join("");
-
-  }
-
-
-  // =======================================================
-  // MOVIMENTAÇÕES / ENTRADAS / SAÍDAS
-  // =======================================================
-
-  if (
-    [
-
-      "entradas",
-
-      "saidas",
-
-      "movimentacoes"
-
-    ].includes(
-      tipo
-    )
-  ) {
-
-    let filtroTipo =
-      "";
-
-
-    if (
-      tipo
-      ===
-      "entradas"
-    ) {
-
-      titulo =
-        "Relatório de Entradas";
-
-
-      filtroTipo =
-        "entrada";
-
-    }
-
-
-    if (
-      tipo
-      ===
-      "saidas"
-    ) {
-
-      titulo =
-        "Relatório de Saídas";
-
-
-      filtroTipo =
-        "saida";
-
-    }
-
-
-    if (
-      tipo
-      ===
-      "movimentacoes"
-    ) {
-
-      titulo =
-        "Relatório de Movimentações";
-
-    }
-
-
-    registros =
-      movimentosCache.filter(
-        movimento => {
-
-          const tipoOk =
-            !filtroTipo
-            ||
-            movimento.tipo
-            ===
-            filtroTipo;
-
-
-          const periodoOk =
-            movimentoDentroPeriodo(
-
-              movimento,
-
-              dataInicial,
-
-              dataFinal
-
-            );
-
-
-          const texto = [
-
-            movimento.produtoNome,
-
-            codigoMovimentacao(
-              movimento
-            ),
-
-            movimento.lote,
-
-            movimento.responsavelNome,
-
-            movimento.origem,
-
-            movimento.destino,
-
-            movimento.motivo,
-
-            movimento.observacao
-
-          ]
-            .join(" ")
-            .toLowerCase();
-
-
-          return (
-
-            tipoOk
-
-            &&
-
-            periodoOk
-
-            &&
-
-            texto.includes(
-              busca
-            )
-
-          );
-
-        }
-      );
-
-
-    head = `
-
-      <tr>
-
-        <th>Data/Hora</th>
-
-        <th>Tipo</th>
-
-        <th>Produto</th>
-
-        <th>Código</th>
-
-        <th>Lote</th>
-
-        <th>Quantidade</th>
-
-        <th>Origem / Destino</th>
-
-        <th>Responsável</th>
-
-      </tr>
-
-    `;
-
-
-    body =
-      registros.map(
-        movimento => {
-
-          const quantidade =
-            Number(
-              movimento.quantidade
-              ||
-              0
-            );
-
-
-          totalQuantidade +=
-            quantidade;
-
-
-          if (
-            movimento.tipo
-            ===
-            "entrada"
-          ) {
-
-            totalEntradas +=
-              quantidade;
-
-          }
-
-
-          if (
-            movimento.tipo
-            ===
-            "saida"
-          ) {
-
-            totalSaidas +=
-              quantidade;
-
-          }
-
-
-          return `
-
-            <tr>
-
-              <td>
-                ${formatarDataHora(
-                  movimento.criadoEm
-                )}
-              </td>
-
-              <td>
-
-                ${
-                  movimento.tipo
-                  ===
-                  "entrada"
-                    ?
-                    '<span class="badge ok">Entrada</span>'
-                    :
-                    '<span class="badge info">Saída</span>'
-                }
-
-              </td>
-
-              <td>
-                ${esc(
-                  movimento.produtoNome
-                  ||
-                  "-"
-                )}
-              </td>
-
-              <td>
-                ${esc(
-                  codigoMovimentacao(
-                    movimento
+                  perfilLabel(
+                    u.perfil
                   )
                 )}
               </td>
 
               <td>
-                ${esc(
-                  movimento.lote
-                  ||
-                  "-"
-                )}
-              </td>
 
-              <td>
-                ${quantidade}
-              </td>
+                ${
+                  u.ativo
+                  ===
+                  false
 
-              <td>
-                ${esc(
-                  movimento.destino
-                  ||
-                  movimento.origem
-                  ||
-                  "-"
-                )}
-              </td>
+                    ?
+                    '<span class="badge danger">Não</span>'
 
-              <td>
-                ${esc(
-                  movimento.responsavelNome
-                  ||
-                  "-"
-                )}
+                    :
+                    '<span class="badge ok">Sim</span>'
+                }
+
               </td>
 
             </tr>
 
-          `;
-
-        }
-      )
-      .join("");
-
-  }
-
-
-  // =======================================================
-  // TOTAIS DE ENTRADAS E SAÍDAS
-  // =======================================================
-
-  if (
-    ![
-
-      "entradas",
-
-      "saidas",
-
-      "movimentacoes"
-
-    ].includes(
-      tipo
-    )
-  ) {
-
-    const movimentosPeriodo =
-      movimentosCache.filter(
-        movimento =>
-
-          movimentoDentroPeriodo(
-
-            movimento,
-
-            dataInicial,
-
-            dataFinal
-
-          )
-      );
-
-
-    totalEntradas =
-      movimentosPeriodo
-
-        .filter(
-          movimento =>
-            movimento.tipo
-            ===
-            "entrada"
+          `
         )
+        .join("")
 
-        .reduce(
-          (
-            total,
-            movimento
-          ) =>
+        :
 
-            total
-            +
-            Number(
-              movimento.quantidade
-              ||
-              0
-            ),
+        `
 
-          0
-        );
+          <tr>
 
+            <td colspan="4">
+              Nenhum usuário cadastrado.
+            </td>
 
-    totalSaidas =
-      movimentosPeriodo
+          </tr>
 
-        .filter(
-          movimento =>
-            movimento.tipo
-            ===
-            "saida"
-        )
-
-        .reduce(
-          (
-            total,
-            movimento
-          ) =>
-
-            total
-            +
-            Number(
-              movimento.quantidade
-              ||
-              0
-            ),
-
-          0
-        );
+        `;
 
   }
 
-              movimento.quantidade
-              ||
-              0
-            ),
+  catch (err) {
 
-          0
-        );
-
-  }
+    console.error(
+      err
+    );
 
 
-  // =======================================================
-  // SEM RESULTADOS
-  // =======================================================
+    $("usuariosBody")
+      .innerHTML = `
 
-  if (
-    !registros.length
-  ) {
+        <tr>
 
-    let colspan =
-      6;
+          <td colspan="4">
+            Erro ao carregar usuários.
+          </td>
 
+        </tr>
 
-    if (
-      tipo
-      ===
-      "estoque"
-    ) {
-
-      colspan =
-        7;
-
-    }
-
-
-    if (
-      [
-
-        "entradas",
-
-        "saidas",
-
-        "movimentacoes"
-
-      ].includes(
-        tipo
-      )
-    ) {
-
-      colspan =
-        8;
-
-    }
-
-
-    body = `
-
-      <tr>
-
-        <td colspan="${colspan}">
-
-          Nenhum registro encontrado para os filtros selecionados.
-
-        </td>
-
-      </tr>
-
-    `;
+      `;
 
   }
-
-
-  $("relatorioTitulo")
-    .textContent =
-    titulo;
-
-
-  $("relatorioHead")
-    .innerHTML =
-    head;
-
-
-  $("relatorioBody")
-    .innerHTML =
-    body;
-
-
-  $("relatorioTotalRegistros")
-    .textContent =
-    registros.length;
-
-
-  $("relatorioQuantidade")
-    .textContent =
-    totalQuantidade;
-
-
-  $("relatorioEntradas")
-    .textContent =
-    totalEntradas;
-
-
-  $("relatorioSaidas")
-    .textContent =
-    totalSaidas;
-
-
-  relatorioAtual = {
-
-    titulo,
-
-    tipo,
-
-    registros,
-
-    dataInicial,
-
-    dataFinal,
-
-    busca,
-
-    totalQuantidade,
-
-    totalEntradas,
-
-    totalSaidas
-
-  };
 
 }
-
-
-// =========================================================
-// EVENTOS RELATÓRIOS
-// =========================================================
-
-$("btnGerarRelatorio")
-  ?.addEventListener(
-    "click",
-    gerarRelatorio
-  );
-
-
-$("relatorioTipo")
-  ?.addEventListener(
-    "change",
-    gerarRelatorio
-  );
-
-
-$("btnPdfRelatorio")
-  ?.addEventListener(
-    "click",
-    () => {
-
-      gerarRelatorio();
-
-      gerarPDFRelatorio();
-
-    }
-  );
-
-
-// =========================================================
-// PDF
-// =========================================================
-
-function gerarPDFRelatorio() {
-
-  if (
-    !relatorioAtual.titulo
-  ) {
-
-    alert(
-      "Gere o relatório antes de criar o PDF."
-    );
-
-
-    return;
-
-  }
-
-
-  const dataGeracao =
-    new Date()
-      .toLocaleString(
-        "pt-BR"
-      );
-
-
-  const inicio =
-    $("relatorioDataInicial")
-      ?.value
-    ||
-    "";
-
-
-  const fim =
-    $("relatorioDataFinal")
-      ?.value
-    ||
-    "";
-
-
-  let periodo =
-    "Todos os períodos";
-
-
-  if (
-    inicio
-    &&
-    fim
-  ) {
-
-    periodo =
-
-      `${formatDateBR(
-        inicio
-      )} a ${formatDateBR(
-        fim
-      )}`;
-
-  }
-
-  else if (
-    inicio
-  ) {
-
-    periodo =
-
-      `A partir de ${formatDateBR(
-        inicio
-      )}`;
-
-  }
-
-  else if (
-    fim
-  ) {
-
-    periodo =
-
-      `Até ${formatDateBR(
-        fim
-      )}`;
-
-  }
-
-
-  const tabela =
-    $("relatorioBody")
-      ?.closest(
-        "table"
-      )
-      ?.outerHTML
-    ||
-    "";
-
-
-  const janela =
-    window.open(
-
-      "",
-
-      "_blank"
-
-    );
-
-
-  if (
-    !janela
-  ) {
-
-    alert(
-      "O navegador bloqueou a janela do relatório. Permita pop-ups para gerar o PDF."
-    );
-
-
-    return;
-
-  }
-
-
-  janela.document.write(`
-
-    <!DOCTYPE html>
-
-    <html lang="pt-BR">
-
-    <head>
-
-      <meta charset="UTF-8">
-
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-      >
-
-      <title>
-        ${esc(
-          relatorioAtual.titulo
-        )}
-      </title>
-
-      <style>
-
-        * {
-          box-sizing: border-box;
-        }
-
-        body {
-
-          font-family:
-            Arial,
-            Helvetica,
-            sans-serif;
-
-          margin: 30px;
-
-          color: #222222;
-
-        }
-
-        .cabecalho {
-
-          text-align: center;
-
-          border-bottom:
-            2px solid
-            #17375e;
-
-          padding-bottom: 15px;
-
-          margin-bottom: 20px;
-
-        }
-
-        .cabecalho h1 {
-
-          color: #17375e;
-
-          margin:
-            0
-            0
-            5px;
-
-          font-size: 26px;
-
-        }
-
-        .cabecalho h2 {
-
-          margin:
-            5px
-            0;
-
-          font-size: 18px;
-
-        }
-
-        .cabecalho p {
-
-          margin:
-            4px
-            0;
-
-          color: #555555;
-
-          font-size: 12px;
-
-        }
-
-        .resumo {
-
-          display: grid;
-
-          grid-template-columns:
-            repeat(
-              4,
-              1fr
-            );
-
-          gap: 10px;
-
-          margin-bottom: 20px;
-
-        }
-
-        .resumo div {
-
-          border:
-            1px solid
-            #cccccc;
-
-          padding: 10px;
-
-          border-radius: 6px;
-
-          text-align: center;
-
-        }
-
-        .resumo strong {
-
-          display: block;
-
-          margin-top: 5px;
-
-          color: #17375e;
-
-          font-size: 19px;
-
-        }
-
-        table {
-
-          width: 100%;
-
-          border-collapse: collapse;
-
-          font-size: 10px;
-
-        }
-
-        th {
-
-          background: #17375e;
-
-          color: #ffffff;
-
-          border:
-            1px solid
-            #cccccc;
-
-          padding: 7px;
-
-          text-align: left;
-
-        }
-
-        td {
-
-          border:
-            1px solid
-            #cccccc;
-
-          padding: 7px;
-
-        }
-
-        tr:nth-child(even) {
-
-          background: #f5f5f5;
-
-        }
-
-        .badge {
-
-          font-weight: bold;
-
-        }
-
-        .rodape {
-
-          margin-top: 30px;
-
-          font-size: 10px;
-
-          color: #666666;
-
-          text-align: center;
-
-        }
-
-        @page {
-
-          size: A4 landscape;
-
-          margin: 12mm;
-
-        }
-
-        @media print {
-
-          body {
-
-            margin: 0;
-
-          }
-
-        }
-
-      </style>
-
-    </head>
-
-
-    <body>
-
-
-      <div class="cabecalho">
-
-        <h1>
-          SISFAR V2
-        </h1>
-
-        <h2>
-          ${esc(
-            relatorioAtual.titulo
-          )}
-        </h2>
-
-        <p>
-          Sistema Integrado de Controle de Estoque de Farmácia
-        </p>
-
-        <p>
-          Período: ${esc(
-            periodo
-          )}
-        </p>
-
-        <p>
-          Gerado em: ${esc(
-            dataGeracao
-          )}
-        </p>
-
-        <p>
-
-          Responsável:
-
-          ${esc(
-            usuarioAtual?.nome
-            ||
-            usuarioAtual?.email
-            ||
-            "-"
-          )}
-
-        </p>
-
-      </div>
-
-
-      <div class="resumo">
-
-        <div>
-
-          Registros
-
-          <strong>
-            ${relatorioAtual.registros.length}
-          </strong>
-
-        </div>
-
-
-        <div>
-
-          Quantidade
-
-          <strong>
-            ${relatorioAtual.totalQuantidade}
-          </strong>
-
-        </div>
-
-
-        <div>
-
-          Entradas
-
-          <strong>
-            ${relatorioAtual.totalEntradas}
-          </strong>
-
-        </div>
-
-
-        <div>
-
-          Saídas
-
-          <strong>
-            ${relatorioAtual.totalSaidas}
-          </strong>
-
-        </div>
-
-      </div>
-
-
-      ${tabela}
-
-
-      <div class="rodape">
-
-        SISFAR V2 —
-        Relatório gerado eletronicamente pelo sistema.
-
-      </div>
-
-
-      <script>
-
-        window.onload = function() {
-
-          setTimeout(
-
-            function() {
-
-              window.print();
-
-            },
-
-            500
-
-          );
-
-        };
-
-      <\/script>
-
-
-    </body>
-
-    </html>
-
-  `);
-
-
-  janela.document.close();
-
-}
-
-
-// =========================================================
-// FIM
-// =========================================================
