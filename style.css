@@ -1,3 +1,8 @@
+Biblioteca
+/
+style.css
+
+
 /* =========================================================
    SISFAR V2
    STYLE.CSS
@@ -1499,4 +1504,238 @@ td .btn {
     font-size: 11px;
   }
 
+}
+
+/* =========================================================
+   LEITOR DE CÓDIGO DE BARRAS - USB / BLUETOOTH / CÂMERA
+========================================================= */
+
+.barcode-field {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.barcode-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-scan {
+  flex: 0 0 auto;
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+.barcode-help {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.scanner-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(8, 20, 34, 0.82);
+  backdrop-filter: blur(3px);
+}
+
+.scanner-box {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.scanner-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.scanner-head h3 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 20px;
+}
+
+.scanner-head p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.scanner-video-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #000000;
+  aspect-ratio: 4 / 3;
+}
+
+#scannerVideo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000000;
+}
+
+.scanner-mira {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.scanner-mira::before {
+  content: "";
+  width: min(82%, 560px);
+  height: 36%;
+  min-height: 120px;
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 9999px rgba(0, 0, 0, 0.18),
+    0 0 24px rgba(255, 255, 255, 0.18);
+}
+
+.scanner-linha {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 50%;
+  height: 2px;
+  background: #ff3b30;
+  box-shadow: 0 0 10px rgba(255, 59, 48, 0.9);
+  transform: translateY(-50%);
+  animation: scannerLinha 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes scannerLinha {
+  from {
+    transform: translateY(-65px);
+  }
+
+  to {
+    transform: translateY(65px);
+  }
+}
+
+.scanner-status {
+  margin-top: 14px;
+  padding: 11px 12px;
+  border: 1px solid #cddff3;
+  border-radius: 10px;
+  background: #eef4fb;
+  color: var(--info);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.scanner-help {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .barcode-field {
+    flex-direction: column;
+  }
+
+  .btn-scan {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .scanner-modal {
+    align-items: flex-start;
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  .scanner-box {
+    width: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .scanner-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .scanner-head .btn {
+    width: 100%;
+  }
+
+  .scanner-video-wrap {
+    aspect-ratio: 3 / 4;
+    max-height: 68vh;
+  }
+
+  .scanner-mira::before {
+    width: 88%;
+    height: 30%;
+    min-height: 110px;
+  }
+
+  .scanner-linha {
+    left: 9%;
+    right: 9%;
+  }
+}
+
+@media (max-width: 480px) {
+  .scanner-modal {
+    padding: 0;
+  }
+
+  .scanner-box {
+    min-height: 100vh;
+    border-radius: 0;
+    border: 0;
+  }
+
+  .scanner-head h3 {
+    font-size: 18px;
+  }
+
+  .scanner-video-wrap {
+    aspect-ratio: 9 / 13;
+    max-height: 72vh;
+    border-radius: 12px;
+  }
+
+  .scanner-status {
+    font-size: 13px;
+  }
+}
+
+@media print {
+  .scanner-modal,
+  .barcode-help,
+  .btn-scan {
+    display: none !important;
+  }
 }
