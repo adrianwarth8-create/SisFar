@@ -2370,8 +2370,6 @@ function preencherSelectProdutos() {
   preencherLotesBaixa();
 
 }
-
-
 // =========================================================
 // LOCALIZAR CÓDIGO NA ENTRADA
 // =========================================================
@@ -2446,6 +2444,10 @@ function localizarCodigoEntrada() {
 
 }
 
+
+// =========================================================
+// LEITOR USB / BLUETOOTH - ENTRADA
+// =========================================================
 
 $("entradaCodigoBarras")
   ?.addEventListener(
@@ -2951,6 +2953,10 @@ function localizarCodigoBaixa() {
 }
 
 
+// =========================================================
+// LEITOR USB / BLUETOOTH - BAIXA
+// =========================================================
+
 $("baixaCodigoBarras")
   ?.addEventListener(
     "change",
@@ -3433,6 +3439,669 @@ $("baixaForm")
   );
 
 
+// =========================================================
+// SCANNER - CÂMERA DO CELULAR
+// =========================================================
+
+let scannerControles =
+  null;
+
+let scannerDestino =
+  null;
+
+let scannerEmExecucao =
+  false;
+
+let ultimoCodigoScanner =
+  "";
+
+let ultimoCodigoScannerTempo =
+  0;
+
+
+// =========================================================
+// MOSTRAR STATUS DO SCANNER
+// =========================================================
+
+function definirStatusScanner(
+  texto
+) {
+
+  const status =
+    $("scannerStatus");
+
+
+  if (
+    status
+  ) {
+
+    status.textContent =
+      texto;
+
+  }
+
+}
+
+
+// =========================================================
+// FECHAR SCANNER
+// =========================================================
+
+function fecharScanner() {
+
+  scannerEmExecucao =
+    false;
+
+
+  scannerDestino =
+    null;
+
+
+  ultimoCodigoScanner =
+    "";
+
+
+  try {
+
+    scannerControles
+      ?.stop?.();
+
+  }
+
+  catch (erro) {
+
+    console.warn(
+      "Erro ao parar scanner:",
+      erro
+    );
+
+  }
+
+
+  scannerControles =
+    null;
+
+
+  const video =
+    $("scannerVideo");
+
+
+  if (
+    video
+    &&
+    video.srcObject
+  ) {
+
+    try {
+
+      video.srcObject
+        .getTracks()
+        .forEach(
+          track =>
+            track.stop()
+        );
+
+    }
+
+    catch (erro) {
+
+      console.warn(
+        "Erro ao parar câmera:",
+        erro
+      );
+
+    }
+
+
+    video.srcObject =
+      null;
+
+  }
+
+
+  $("scannerModal")
+    ?.classList
+    .add(
+      "hidden"
+    );
+
+
+  definirStatusScanner(
+    "Scanner fechado."
+  );
+
+}
+
+
+// =========================================================
+// PROCESSAR CÓDIGO LIDO PELA CÂMERA
+// =========================================================
+
+function processarCodigoScanner(
+  codigo
+) {
+
+  const codigoNormalizado =
+    normalizarCodigoBarras(
+      codigo
+    );
+
+
+  if (
+    !codigoNormalizado
+  ) {
+
+    return;
+
+  }
+
+
+  const agora =
+    Date.now();
+
+
+  if (
+    codigoNormalizado
+    ===
+    ultimoCodigoScanner
+
+    &&
+
+    agora
+    -
+    ultimoCodigoScannerTempo
+    <
+    1500
+  ) {
+
+    return;
+
+  }
+
+
+  ultimoCodigoScanner =
+    codigoNormalizado;
+
+
+  ultimoCodigoScannerTempo =
+    agora;
+
+
+  if (
+    scannerDestino
+    ===
+    "entrada"
+  ) {
+
+    const campo =
+      $("entradaCodigoBarras");
+
+
+    if (
+      campo
+    ) {
+
+      campo.value =
+        codigoNormalizado;
+
+    }
+
+
+    localizarCodigoEntrada();
+
+  }
+
+
+  else if (
+    scannerDestino
+    ===
+    "baixa"
+  ) {
+
+    const campo =
+      $("baixaCodigoBarras");
+
+
+    if (
+      campo
+    ) {
+
+      campo.value =
+        codigoNormalizado;
+
+    }
+
+
+    localizarCodigoBaixa();
+
+  }
+
+
+  if (
+    navigator.vibrate
+  ) {
+
+    navigator.vibrate(
+      120
+    );
+
+  }
+
+
+  definirStatusScanner(
+    `Código identificado: ${codigoNormalizado}`
+  );
+
+
+  setTimeout(
+    fecharScanner,
+    250
+  );
+
+}
+
+
+// =========================================================
+// ABRIR SCANNER
+// =========================================================
+
+async function abrirScanner(
+  destino
+) {
+
+  if (
+    scannerEmExecucao
+  ) {
+
+    return;
+
+  }
+
+
+  scannerDestino =
+    destino;
+
+
+  ultimoCodigoScanner =
+    "";
+
+
+  ultimoCodigoScannerTempo =
+    0;
+
+
+  const modal =
+    $("scannerModal");
+
+
+  const video =
+    $("scannerVideo");
+
+
+  if (
+    !modal
+    ||
+    !video
+  ) {
+
+    alert(
+      "O leitor de câmera não foi encontrado na página."
+    );
+
+    return;
+
+  }
+
+
+  modal.classList.remove(
+    "hidden"
+  );
+
+
+  definirStatusScanner(
+    "Solicitando acesso à câmera..."
+  );
+
+
+  try {
+
+    if (
+      !window.ZXingBrowser
+    ) {
+
+      throw new Error(
+        "Biblioteca ZXing não carregada."
+      );
+
+    }
+
+
+    scannerEmExecucao =
+      true;
+
+
+    const leitor =
+      new window.ZXingBrowser
+        .BrowserMultiFormatReader();
+
+
+    const dispositivos =
+      await window.ZXingBrowser
+        .BrowserCodeReader
+        .listVideoInputDevices();
+
+
+    if (
+      !dispositivos.length
+    ) {
+
+      throw new Error(
+        "Nenhuma câmera foi encontrada neste dispositivo."
+      );
+
+    }
+
+
+    let cameraEscolhida =
+      dispositivos[0];
+
+
+    const cameraTraseira =
+      dispositivos.find(
+        dispositivo => {
+
+          const nome =
+            (
+              dispositivo.label
+              ||
+              ""
+            )
+              .toLowerCase();
+
+
+          return (
+            nome.includes(
+              "back"
+            )
+            ||
+            nome.includes(
+              "rear"
+            )
+            ||
+            nome.includes(
+              "environment"
+            )
+            ||
+            nome.includes(
+              "traseira"
+            )
+          );
+
+        }
+      );
+
+
+    if (
+      cameraTraseira
+    ) {
+
+      cameraEscolhida =
+        cameraTraseira;
+
+    }
+
+
+    definirStatusScanner(
+      "Câmera ativa. Aponte para o código de barras."
+    );
+
+
+    scannerControles =
+      await leitor.decodeFromVideoDevice(
+
+        cameraEscolhida.deviceId,
+
+        video,
+
+        (
+          result,
+          error,
+          controls
+        ) => {
+
+          scannerControles =
+            controls;
+
+
+          if (
+            result
+          ) {
+
+            processarCodigoScanner(
+              result.getText()
+            );
+
+          }
+
+
+          if (
+            error
+            &&
+            !(
+              error.name
+              ===
+              "NotFoundException"
+            )
+          ) {
+
+            console.debug(
+              "Scanner:",
+              error
+            );
+
+          }
+
+        }
+
+      );
+
+  }
+
+  catch (erro) {
+
+    console.error(
+      "Erro ao abrir câmera:",
+      erro
+    );
+
+
+    scannerEmExecucao =
+      false;
+
+
+    let mensagemErro =
+      "Não foi possível abrir a câmera.";
+
+
+    const nome =
+      erro?.name
+      ||
+      "";
+
+
+    if (
+      nome
+      ===
+      "NotAllowedError"
+      ||
+      nome
+      ===
+      "PermissionDeniedError"
+    ) {
+
+      mensagemErro =
+        "Permissão da câmera negada. Autorize o uso da câmera no navegador e tente novamente.";
+
+    }
+
+
+    else if (
+      nome
+      ===
+      "NotFoundError"
+    ) {
+
+      mensagemErro =
+        "Nenhuma câmera foi encontrada neste dispositivo.";
+
+    }
+
+
+    else if (
+      nome
+      ===
+      "NotReadableError"
+    ) {
+
+      mensagemErro =
+        "A câmera está sendo usada por outro aplicativo.";
+
+    }
+
+
+    else if (
+      erro?.message
+    ) {
+
+      mensagemErro =
+        erro.message;
+
+    }
+
+
+    definirStatusScanner(
+      mensagemErro
+    );
+
+  }
+
+}
+
+
+// =========================================================
+// BOTÃO CÂMERA - ENTRADA
+// =========================================================
+
+$("btnScanEntrada")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      abrirScanner(
+        "entrada"
+      );
+
+    }
+  );
+
+
+// =========================================================
+// BOTÃO CÂMERA - BAIXA
+// =========================================================
+
+$("btnScanBaixa")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      abrirScanner(
+        "baixa"
+      );
+
+    }
+  );
+
+
+// =========================================================
+// BOTÃO FECHAR SCANNER
+// =========================================================
+
+$("btnFecharScanner")
+  ?.addEventListener(
+    "click",
+    fecharScanner
+  );
+
+
+// =========================================================
+// FECHAR AO CLICAR FORA DO BOX
+// =========================================================
+
+$("scannerModal")
+  ?.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target
+        ===
+        $("scannerModal")
+      ) {
+
+        fecharScanner();
+
+      }
+
+    }
+  );
+
+
+// =========================================================
+// FECHAR COM ESC
+// =========================================================
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key
+      ===
+      "Escape"
+
+      &&
+
+      scannerEmExecucao
+    ) {
+
+      fecharScanner();
+
+    }
+
+  }
+);
+
+
+// =========================================================
+// FECHAR CÂMERA AO SAIR DA PÁGINA
+// =========================================================
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if (
+      document.hidden
+      &&
+      scannerEmExecucao
+    ) {
+
+      fecharScanner();
+
+    }
+
+  }
+);
 // =========================================================
 // MOVIMENTAÇÕES
 // =========================================================
@@ -4435,8 +5104,8 @@ function movimentoDentroPeriodo(
         `${dataFinal}T23:59:59`
       );
 
-
-    if (
+    
+        if (
       data
       >
       fim
@@ -5433,6 +6102,16 @@ function gerarRelatorio() {
             total
             +
             Number(
+              movimento.quantidade
+              ||
+              0
+            ),
+
+          0
+        );
+
+  }
+
               movimento.quantidade
               ||
               0
