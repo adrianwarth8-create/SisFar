@@ -9,10 +9,17 @@
   --danger:#b42318;
   --success:#16794b;
   --warning:#b26a00;
+  --info:#244f7c;
   --sidebar:260px;
 }
 
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
 
 body{
   margin:0;
@@ -21,9 +28,25 @@ body{
   color:var(--text);
 }
 
-button,input,select{font:inherit}
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
 
-.hidden{display:none!important}
+button{
+  -webkit-tap-highlight-color:transparent;
+}
+
+.hidden{
+  display:none!important;
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
 
 .login-screen{
   min-height:100vh;
@@ -36,7 +59,7 @@ button,input,select{font:inherit}
 
 .login-card{
   width:min(430px,100%);
-  background:#fff;
+  background:#ffffff;
   border-radius:18px;
   padding:32px;
   box-shadow:0 18px 50px rgba(0,0,0,.22);
@@ -58,6 +81,11 @@ button,input,select{font:inherit}
   color:var(--muted);
 }
 
+
+/* =========================================================
+   CAMPOS
+========================================================= */
+
 .field{
   margin-bottom:16px;
 }
@@ -69,20 +97,40 @@ button,input,select{font:inherit}
 }
 
 .field input,
-.field select{
+.field select,
+.field textarea{
   width:100%;
   padding:12px 13px;
   border:1px solid var(--border);
   border-radius:10px;
   outline:none;
-  background:#fff;
+  background:#ffffff;
+  color:var(--text);
 }
 
 .field input:focus,
-.field select:focus{
+.field select:focus,
+.field textarea:focus{
   border-color:var(--primary2);
   box-shadow:0 0 0 3px rgba(36,85,138,.12);
 }
+
+.field input[readonly]{
+  background:#f4f6f8;
+  color:#596574;
+}
+
+#produtoCodigoBarras,
+#entradaCodigoBarras,
+#baixaCodigoBarras{
+  font-family:"Courier New",monospace;
+  letter-spacing:.7px;
+}
+
+
+/* =========================================================
+   BOTÕES
+========================================================= */
 
 .btn{
   border:0;
@@ -90,11 +138,24 @@ button,input,select{font:inherit}
   padding:11px 16px;
   cursor:pointer;
   font-weight:700;
+  transition:
+    opacity .2s,
+    transform .2s,
+    box-shadow .2s;
+}
+
+.btn:hover{
+  opacity:.92;
+  transform:translateY(-1px);
+}
+
+.btn:active{
+  transform:translateY(0);
 }
 
 .btn-primary{
   background:var(--primary);
-  color:#fff;
+  color:#ffffff;
 }
 
 .btn-secondary{
@@ -111,11 +172,17 @@ button,input,select{font:inherit}
   width:100%;
 }
 
+
+/* =========================================================
+   MENSAGENS
+========================================================= */
+
 .message{
   margin-top:15px;
   padding:10px 12px;
   border-radius:9px;
   font-size:14px;
+  line-height:1.4;
 }
 
 .message.error{
@@ -128,17 +195,32 @@ button,input,select{font:inherit}
   color:#146c43;
 }
 
+.message.warning{
+  background:#fff1cc;
+  color:#8c5b00;
+}
+
+
+/* =========================================================
+   APP
+========================================================= */
+
 .app{
   min-height:100vh;
   display:flex;
 }
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
 
 .sidebar{
   position:fixed;
   inset:0 auto 0 0;
   width:var(--sidebar);
   background:var(--primary);
-  color:#fff;
+  color:#ffffff;
   padding:20px 14px;
   z-index:20;
   overflow-y:auto;
@@ -166,7 +248,7 @@ button,input,select{font:inherit}
   gap:9px;
   border:0;
   background:transparent;
-  color:#fff;
+  color:#ffffff;
   padding:12px;
   border-radius:9px;
   cursor:pointer;
@@ -179,6 +261,11 @@ button,input,select{font:inherit}
   background:rgba(255,255,255,.15);
 }
 
+
+/* =========================================================
+   CONTEÚDO PRINCIPAL
+========================================================= */
+
 .main{
   margin-left:var(--sidebar);
   width:calc(100% - var(--sidebar));
@@ -187,15 +274,20 @@ button,input,select{font:inherit}
 
 .topbar{
   min-height:70px;
-  background:#fff;
+  background:#ffffff;
   border-bottom:1px solid var(--border);
   display:flex;
   align-items:center;
   justify-content:space-between;
+  gap:20px;
   padding:12px 24px;
   position:sticky;
   top:0;
   z-index:10;
+}
+
+.top-user{
+  text-align:right;
 }
 
 .top-user strong{
@@ -208,12 +300,19 @@ button,input,select{font:inherit}
 
 .content{
   padding:24px;
+  max-width:1600px;
+  margin:0 auto;
 }
 
 .page-title{
   margin:0 0 18px;
   color:var(--primary);
 }
+
+
+/* =========================================================
+   CARDS
+========================================================= */
 
 .cards{
   display:grid;
@@ -242,8 +341,13 @@ button,input,select{font:inherit}
   margin-top:7px;
 }
 
+
+/* =========================================================
+   PAINÉIS
+========================================================= */
+
 .panel{
-  background:#fff;
+  background:#ffffff;
   border:1px solid var(--border);
   border-radius:14px;
   padding:18px;
@@ -263,8 +367,13 @@ button,input,select{font:inherit}
   color:var(--primary);
 }
 
+
+/* =========================================================
+   TABELAS
+========================================================= */
+
 .table-wrap{
-  overflow:auto;
+  overflow-x:auto;
 }
 
 table{
@@ -279,6 +388,7 @@ td{
   border-bottom:1px solid #edf1f5;
   text-align:left;
   font-size:14px;
+  vertical-align:middle;
 }
 
 th{
@@ -286,12 +396,22 @@ th{
   background:#f8fafc;
 }
 
+tbody tr:hover{
+  background:#f8fafc;
+}
+
+
+/* =========================================================
+   BADGES
+========================================================= */
+
 .badge{
   display:inline-block;
   border-radius:999px;
   padding:5px 9px;
   font-size:12px;
   font-weight:700;
+  white-space:nowrap;
 }
 
 .badge.ok{
@@ -314,6 +434,11 @@ th{
   color:#244f7c;
 }
 
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
+
 .toolbar{
   display:flex;
   gap:10px;
@@ -326,8 +451,25 @@ th{
   padding:10px 12px;
   border:1px solid var(--border);
   border-radius:9px;
-  background:#fff;
+  background:#ffffff;
+  outline:none;
 }
+
+.toolbar input{
+  flex:1;
+  min-width:280px;
+}
+
+.toolbar input:focus,
+.toolbar select:focus{
+  border-color:var(--primary2);
+  box-shadow:0 0 0 3px rgba(36,85,138,.1);
+}
+
+
+/* =========================================================
+   FORMULÁRIOS
+========================================================= */
 
 .form-grid{
   display:grid;
@@ -340,37 +482,276 @@ th{
   display:flex;
   gap:10px;
   justify-content:flex-end;
+  align-items:center;
+  flex-wrap:wrap;
   margin-top:8px;
 }
+
+
+/* =========================================================
+   AVISOS
+========================================================= */
 
 .notice{
   background:#eef4fb;
   color:#244f7c;
   border:1px solid #cddff3;
+  border-left:4px solid var(--primary2);
   border-radius:10px;
   padding:12px 14px;
   margin-bottom:18px;
+  line-height:1.5;
 }
 
-.danger-text{
-  color:var(--danger);
+
+/* =========================================================
+   ESTOQUE
+========================================================= */
+
+#page-estoque table{
+  min-width:980px;
 }
 
-.warning-text{
-  color:var(--warning);
+#searchProduto{
+  width:100%;
 }
 
-.success-text{
-  color:var(--success);
+
+/* =========================================================
+   MOVIMENTAÇÕES
+========================================================= */
+
+#page-movimentacoes table{
+  min-width:1000px;
 }
 
-@media(max-width:1000px){
 
-  .cards{
-    grid-template-columns:repeat(2,1fr);
+/* =========================================================
+   LOTES E VALIDADES
+========================================================= */
+
+#page-validade table{
+  min-width:850px;
+}
+
+
+/* =========================================================
+   USUÁRIOS
+========================================================= */
+
+#page-usuarios table{
+  min-width:760px;
+}
+
+
+/* =========================================================
+   BOTÕES DAS TABELAS
+========================================================= */
+
+td .btn{
+  padding:7px 10px;
+  font-size:13px;
+  margin:2px;
+}
+
+
+/* =========================================================
+   SCANNER - CÂMERA DO CELULAR
+========================================================= */
+
+.scanner-modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  background:rgba(8,20,34,.86);
+}
+
+.scanner-box{
+  width:min(760px,100%);
+  max-height:calc(100vh - 40px);
+
+  overflow-y:auto;
+
+  background:#ffffff;
+
+  border-radius:18px;
+
+  padding:18px;
+
+  box-shadow:
+    0 24px 70px
+    rgba(0,0,0,.38);
+}
+
+.scanner-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
+}
+
+.scanner-head h3{
+  margin:0;
+  color:var(--primary);
+  font-size:20px;
+}
+
+.scanner-head p{
+  margin:6px 0 0;
+  color:var(--muted);
+  line-height:1.4;
+}
+
+.scanner-video-wrap{
+  position:relative;
+
+  width:100%;
+
+  overflow:hidden;
+
+  border-radius:14px;
+
+  background:#000000;
+
+  aspect-ratio:4 / 3;
+}
+
+#scannerVideo{
+  display:block;
+
+  width:100%;
+  height:100%;
+
+  object-fit:cover;
+
+  background:#000000;
+}
+
+
+/* =========================================================
+   MIRA DO SCANNER
+========================================================= */
+
+.scanner-mira{
+  position:absolute;
+  inset:0;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  pointer-events:none;
+}
+
+.scanner-mira::before{
+  content:"";
+
+  width:min(82%,560px);
+
+  height:34%;
+
+  min-height:120px;
+
+  border:3px solid rgba(255,255,255,.95);
+
+  border-radius:14px;
+
+  box-shadow:
+    0 0 0 9999px rgba(0,0,0,.20),
+    0 0 24px rgba(255,255,255,.20);
+}
+
+
+/* =========================================================
+   LINHA VERMELHA
+========================================================= */
+
+.scanner-linha{
+  position:absolute;
+
+  left:12%;
+  right:12%;
+
+  top:50%;
+
+  height:2px;
+
+  background:#ff3b30;
+
+  box-shadow:
+    0 0 10px
+    rgba(255,59,48,.95);
+
+  transform:translateY(-50%);
+
+  animation:
+    scannerLinha
+    1.8s
+    ease-in-out
+    infinite
+    alternate;
+}
+
+@keyframes scannerLinha{
+
+  from{
+    transform:translateY(-65px);
+  }
+
+  to{
+    transform:translateY(65px);
   }
 
 }
+
+
+/* =========================================================
+   STATUS DO SCANNER
+========================================================= */
+
+.scanner-status{
+  margin-top:14px;
+
+  padding:11px 12px;
+
+  border:1px solid #cddff3;
+
+  border-radius:10px;
+
+  background:#eef4fb;
+
+  color:var(--info);
+
+  font-weight:700;
+
+  line-height:1.4;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media(max-width:1100px){
+
+  .cards{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+}
+
+
+/* =========================================================
+   CELULAR
+========================================================= */
 
 @media(max-width:760px){
 
@@ -378,6 +759,11 @@ th{
     position:static;
     width:100%;
     min-height:auto;
+    padding:14px 12px;
+  }
+
+  .sidebar-brand{
+    padding:6px 8px 15px;
   }
 
   .app{
@@ -389,20 +775,221 @@ th{
     width:100%;
   }
 
+  .topbar{
+    position:static;
+    min-height:64px;
+    padding:12px 16px;
+  }
+
+  .top-user{
+    max-width:50%;
+  }
+
+  .top-user strong,
+  .top-user small{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .content{
+    padding:16px;
+  }
+
+  .page-title{
+    font-size:25px;
+  }
+
   .cards{
     grid-template-columns:1fr;
+    gap:12px;
+  }
+
+  .panel{
+    padding:14px;
+    border-radius:12px;
+  }
+
+  .panel-head{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .panel-head .btn{
+    width:100%;
   }
 
   .form-grid{
     grid-template-columns:1fr;
   }
 
-  .topbar{
-    position:static;
+  .form-actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .form-actions .btn{
+    width:100%;
+  }
+
+  .toolbar{
+    flex-direction:column;
+  }
+
+  .toolbar input,
+  .toolbar select{
+    width:100%;
+    min-width:0;
+  }
+
+  #btnScanEntrada,
+  #btnScanBaixa{
+    width:100%;
+    min-height:48px;
+  }
+
+
+  /* SCANNER */
+
+  .scanner-modal{
+    align-items:flex-start;
+    padding:10px;
+    overflow-y:auto;
+  }
+
+  .scanner-box{
+    width:100%;
+    max-height:none;
+    padding:12px;
+    border-radius:14px;
+  }
+
+  .scanner-head{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .scanner-head .btn{
+    width:100%;
+  }
+
+  .scanner-video-wrap{
+    aspect-ratio:3 / 4;
+    max-height:68vh;
+  }
+
+  .scanner-mira::before{
+    width:88%;
+    height:30%;
+    min-height:110px;
+  }
+
+  .scanner-linha{
+    left:9%;
+    right:9%;
+  }
+
+}
+
+
+/* =========================================================
+   CELULAR PEQUENO
+========================================================= */
+
+@media(max-width:480px){
+
+  .login-card{
+    padding:25px 20px;
+  }
+
+  .brand h1{
+    font-size:27px;
   }
 
   .content{
-    padding:16px;
+    padding:12px;
+  }
+
+  .topbar{
+    padding:10px 12px;
+  }
+
+  .page-title{
+    font-size:23px;
+  }
+
+  .stat-value{
+    font-size:26px;
+  }
+
+  .nav-btn{
+    padding:11px 10px;
+  }
+
+
+  /* SCANNER TELA CHEIA */
+
+  .scanner-modal{
+    padding:0;
+  }
+
+  .scanner-box{
+    min-height:100vh;
+
+    border-radius:0;
+
+    box-shadow:none;
+  }
+
+  .scanner-head h3{
+    font-size:18px;
+  }
+
+  .scanner-video-wrap{
+    aspect-ratio:9 / 13;
+    max-height:72vh;
+    border-radius:12px;
+  }
+
+  .scanner-status{
+    font-size:13px;
+  }
+
+}
+
+
+/* =========================================================
+   IMPRESSÃO
+========================================================= */
+
+@media print{
+
+  .sidebar,
+  .topbar,
+  .toolbar,
+  .form-actions,
+  .btn,
+  .notice,
+  .scanner-modal{
+    display:none!important;
+  }
+
+  .main{
+    margin:0;
+    width:100%;
+  }
+
+  .content{
+    padding:0;
+  }
+
+  table{
+    min-width:0;
+  }
+
+  th,
+  td{
+    font-size:11px;
   }
 
 }
