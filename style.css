@@ -1236,3 +1236,82 @@ td .btn{
   }
 
 }
+/* =========================================================
+   MÚLTIPLAS ETIQUETAS
+========================================================= */
+
+#page-etiquetas .etiquetas-resumo{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  margin-bottom:16px;
+}
+
+#tabelaListaEtiquetas{
+  min-width:900px;
+}
+
+#tabelaListaEtiquetas td input[type="number"]{
+  width:90px;
+  padding:8px 9px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  outline:none;
+  background:#ffffff;
+}
+
+#tabelaListaEtiquetas td input[type="number"]:focus{
+  border-color:var(--primary2);
+  box-shadow:0 0 0 3px rgba(36,85,138,.10);
+}
+
+#btnAdicionarEtiqueta,
+#btnImprimirTodasEtiquetas{
+  min-width:180px;
+}
+
+#btnLimparListaEtiquetas{
+  white-space:nowrap;
+}
+
+#page-etiquetas .panel-head small{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  line-height:1.35;
+}
+
+
+/* =========================================================
+   LISTA DE ETIQUETAS NO CELULAR
+========================================================= */
+
+@media(max-width:760px){
+
+  #page-etiquetas .etiquetas-resumo{
+    grid-template-columns:1fr;
+  }
+
+  #btnAdicionarEtiqueta,
+  #btnImprimirTodasEtiquetas,
+  #btnLimparListaEtiquetas{
+    width:100%;
+  }
+
+  #tabelaListaEtiquetas{
+    min-width:760px;
+  }
+
+}
+
+
+/* =========================================================
+   AJUSTES DE IMPRESSÃO PARA LISTA MÚLTIPLA
+========================================================= */
+
+@media print{
+
+  #tabelaListaEtiquetas,
+  #page-etiquetas .etiquetas-resumo{
+    display:none!important;
+  }
+
+}
