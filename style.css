@@ -131,7 +131,7 @@ button{
 
 
 /* =========================================================
-   BOTÃ•ES
+   BOTÕES
 ========================================================= */
 
 .btn{
@@ -265,7 +265,7 @@ button{
 
 
 /* =========================================================
-   CONTEÃšDO PRINCIPAL
+   CONTEÚDO PRINCIPAL
 ========================================================= */
 
 .main{
@@ -345,7 +345,7 @@ button{
 
 
 /* =========================================================
-   PAINÃ‰IS
+   PAINÉIS
 ========================================================= */
 
 .panel{
@@ -470,7 +470,7 @@ tbody tr:hover{
 
 
 /* =========================================================
-   FORMULÃRIOS
+   FORMULÁRIOS
 ========================================================= */
 
 .form-grid{
@@ -520,7 +520,7 @@ tbody tr:hover{
 
 
 /* =========================================================
-   MOVIMENTAÃ‡Ã•ES
+   MOVIMENTAÇÕES
 ========================================================= */
 
 #page-movimentacoes table{
@@ -538,7 +538,7 @@ tbody tr:hover{
 
 
 /* =========================================================
-   USUÃRIOS
+   USUÁRIOS
 ========================================================= */
 
 #page-usuarios table{
@@ -547,7 +547,7 @@ tbody tr:hover{
 
 
 /* =========================================================
-   BOTÃ•ES DAS TABELAS
+   BOTÕES DAS TABELAS
 ========================================================= */
 
 td .btn{
@@ -558,7 +558,7 @@ td .btn{
 
 
 /* =========================================================
-   SCANNER - CÃ‚MERA DO CELULAR
+   SCANNER - CÂMERA DO CELULAR
 ========================================================= */
 
 .scanner-modal{
@@ -961,7 +961,7 @@ td .btn{
 
 
 /* =========================================================
-   IMPRESSÃƒO
+   IMPRESSÃO
 ========================================================= */
 
 @media print{
@@ -1090,7 +1090,7 @@ td .btn{
 
 
 /* =========================================================
-   ÃREA GERADA PARA IMPRESSÃƒO DE ETIQUETAS
+   ÁREA GERADA PARA IMPRESSÃO DE ETIQUETAS
 ========================================================= */
 
 #etiquetasImpressao{
@@ -1186,7 +1186,7 @@ td .btn{
 
 
 /* =========================================================
-   IMPRESSÃƒO ESPECÃFICA DE ETIQUETAS
+   IMPRESSÃO ESPECÍFICA DE ETIQUETAS
 ========================================================= */
 
 @media print{
@@ -1239,7 +1239,7 @@ td .btn{
 
 }
 /* =========================================================
-   MÃšLTIPLAS ETIQUETAS
+   MÚLTIPLAS ETIQUETAS
 ========================================================= */
 
 #page-etiquetas .etiquetas-resumo{
@@ -1306,7 +1306,7 @@ td .btn{
 
 
 /* =========================================================
-   AJUSTES DE IMPRESSÃƒO PARA LISTA MÃšLTIPLA
+   AJUSTES DE IMPRESSÃO PARA LISTA MÚLTIPLA
 ========================================================= */
 
 @media print{
@@ -1314,6 +1314,143 @@ td .btn{
   #tabelaListaEtiquetas,
   #page-etiquetas .etiquetas-resumo{
     display:none!important;
+  }
+
+}
+/* =========================================================
+   RELATÓRIOS - SISFAR V2
+========================================================= */
+
+#page-relatorios .panel:first-of-type{
+  border-top:4px solid var(--primary);
+}
+
+#page-relatorios .cards{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+
+#relatorioTipo,
+#relatorioProduto,
+#relatorioValidadeDias{
+  cursor:pointer;
+}
+
+#relatorioTabela{
+  min-width:980px;
+}
+
+#relatorioHead th{
+  white-space:nowrap;
+}
+
+#relatorioBody td{
+  vertical-align:middle;
+}
+
+#relatorioPeriodo{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  line-height:1.35;
+}
+
+#relatorioMsg{
+  margin-bottom:20px;
+}
+
+#btnGerarRelatorio,
+#btnImprimirRelatorio,
+#btnLimparRelatorio{
+  min-width:160px;
+}
+
+
+/* =========================================================
+   RELATÓRIOS - CELULAR
+========================================================= */
+
+@media(max-width:1100px){
+
+  #page-relatorios .cards{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+}
+
+@media(max-width:760px){
+
+  #page-relatorios .cards{
+    grid-template-columns:1fr;
+  }
+
+  #btnGerarRelatorio,
+  #btnImprimirRelatorio,
+  #btnLimparRelatorio{
+    width:100%;
+  }
+
+  #relatorioTabela{
+    min-width:820px;
+  }
+
+}
+
+
+/* =========================================================
+   RELATÓRIOS - IMPRESSÃO
+========================================================= */
+
+@media print{
+
+  #page-relatorios{
+    display:block!important;
+  }
+
+  #page-relatorios .notice,
+  #page-relatorios .form-grid,
+  #page-relatorios .form-actions,
+  #page-relatorios #relatorioMsg{
+    display:none!important;
+  }
+
+  #page-relatorios .cards{
+    display:grid!important;
+    grid-template-columns:repeat(4,1fr)!important;
+    gap:6mm!important;
+    margin-bottom:8mm!important;
+  }
+
+  #page-relatorios .card{
+    box-shadow:none!important;
+    border:1px solid #cfd6df!important;
+    padding:4mm!important;
+  }
+
+  #page-relatorios .stat-label{
+    font-size:9pt!important;
+  }
+
+  #page-relatorios .stat-value{
+    font-size:16pt!important;
+  }
+
+  #relatorioTabela{
+    min-width:0!important;
+    width:100%!important;
+  }
+
+  #relatorioTabela th,
+  #relatorioTabela td{
+    font-size:9pt!important;
+    padding:2.5mm 2mm!important;
+  }
+
+  #relatorioTitulo{
+    font-size:16pt!important;
+  }
+
+  #relatorioPeriodo{
+    font-size:9pt!important;
   }
 
 }
