@@ -129,7 +129,7 @@ button{
 
 
 /* =========================================================
-   BOTÕES
+   BOTÃ•ES
 ========================================================= */
 
 .btn{
@@ -263,7 +263,7 @@ button{
 
 
 /* =========================================================
-   CONTEÚDO PRINCIPAL
+   CONTEÃšDO PRINCIPAL
 ========================================================= */
 
 .main{
@@ -343,7 +343,7 @@ button{
 
 
 /* =========================================================
-   PAINÉIS
+   PAINÃ‰IS
 ========================================================= */
 
 .panel{
@@ -468,7 +468,7 @@ tbody tr:hover{
 
 
 /* =========================================================
-   FORMULÁRIOS
+   FORMULÃRIOS
 ========================================================= */
 
 .form-grid{
@@ -518,7 +518,7 @@ tbody tr:hover{
 
 
 /* =========================================================
-   MOVIMENTAÇÕES
+   MOVIMENTAÃ‡Ã•ES
 ========================================================= */
 
 #page-movimentacoes table{
@@ -536,7 +536,7 @@ tbody tr:hover{
 
 
 /* =========================================================
-   USUÁRIOS
+   USUÃRIOS
 ========================================================= */
 
 #page-usuarios table{
@@ -545,7 +545,7 @@ tbody tr:hover{
 
 
 /* =========================================================
-   BOTÕES DAS TABELAS
+   BOTÃ•ES DAS TABELAS
 ========================================================= */
 
 td .btn{
@@ -556,7 +556,7 @@ td .btn{
 
 
 /* =========================================================
-   SCANNER - CÂMERA DO CELULAR
+   SCANNER - CÃ‚MERA DO CELULAR
 ========================================================= */
 
 .scanner-modal{
@@ -959,7 +959,7 @@ td .btn{
 
 
 /* =========================================================
-   IMPRESSÃO
+   IMPRESSÃƒO
 ========================================================= */
 
 @media print{
@@ -990,6 +990,249 @@ td .btn{
   th,
   td{
     font-size:11px;
+  }
+
+}
+/* =========================================================
+   ETIQUETAS - SISFAR V2
+========================================================= */
+
+#page-etiquetas .panel:first-of-type{
+  border-top:4px solid var(--primary);
+}
+
+#etiquetaProduto,
+#etiquetaLote,
+#etiquetaFormato,
+#etiquetaQuantidade{
+  cursor:pointer;
+}
+
+#etiquetaNome,
+#etiquetaApresentacao,
+#etiquetaLoteTexto,
+#etiquetaValidade{
+  background:#f4f6f8;
+}
+
+.etiqueta-preview-area{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:260px;
+  padding:20px;
+  background:#f8fafc;
+  border:1px dashed var(--border);
+  border-radius:12px;
+}
+
+.etiqueta-preview{
+  width:70mm;
+  min-height:40mm;
+  padding:5mm;
+  background:#ffffff;
+  border:1px solid #111111;
+  border-radius:4px;
+  color:#111111;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+}
+
+.etiqueta-sistema{
+  text-align:center;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  border-bottom:1px solid #111111;
+  padding-bottom:3px;
+  margin-bottom:5px;
+}
+
+.etiqueta-nome{
+  font-size:16px;
+  font-weight:800;
+  line-height:1.2;
+  text-align:center;
+  margin:4px 0;
+  word-break:break-word;
+}
+
+.etiqueta-apresentacao{
+  font-size:12px;
+  text-align:center;
+  margin-bottom:7px;
+  word-break:break-word;
+}
+
+.etiqueta-linha{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  font-size:12px;
+  line-height:1.4;
+  margin-top:3px;
+}
+
+.etiqueta-linha strong{
+  flex:0 0 auto;
+}
+
+.etiqueta-linha span{
+  text-align:right;
+  word-break:break-word;
+}
+
+.btn-etiqueta{
+  white-space:nowrap;
+}
+
+
+/* =========================================================
+   ÃREA GERADA PARA IMPRESSÃƒO DE ETIQUETAS
+========================================================= */
+
+#etiquetasImpressao{
+  display:none;
+}
+
+.etiquetas-folha-a4{
+  width:210mm;
+  min-height:297mm;
+  padding:10mm;
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  grid-auto-rows:min-content;
+  gap:5mm;
+  align-content:start;
+  background:#ffffff;
+}
+
+.etiqueta-impressao{
+  width:100%;
+  min-height:40mm;
+  padding:4mm;
+  border:1px solid #000000;
+  color:#000000;
+  background:#ffffff;
+  break-inside:avoid;
+  page-break-inside:avoid;
+}
+
+.etiqueta-impressao .etiqueta-sistema{
+  font-size:10px;
+}
+
+.etiqueta-impressao .etiqueta-nome{
+  font-size:15px;
+}
+
+.etiqueta-impressao .etiqueta-apresentacao,
+.etiqueta-impressao .etiqueta-linha{
+  font-size:11px;
+}
+
+.etiqueta-individual{
+  width:70mm;
+  min-height:40mm;
+  padding:4mm;
+  border:1px solid #000000;
+  color:#000000;
+  background:#ffffff;
+}
+
+
+/* =========================================================
+   ETIQUETAS - RESPONSIVIDADE
+========================================================= */
+
+@media(max-width:760px){
+
+  .etiqueta-preview-area{
+    min-height:220px;
+    padding:12px;
+  }
+
+  .etiqueta-preview{
+    width:100%;
+    max-width:70mm;
+  }
+
+  #btnVisualizarEtiqueta,
+  #btnImprimirEtiqueta,
+  #btnLimparEtiqueta{
+    width:100%;
+  }
+
+}
+
+@media(max-width:480px){
+
+  .etiqueta-preview{
+    padding:4mm;
+  }
+
+  .etiqueta-nome{
+    font-size:15px;
+  }
+
+  .etiqueta-apresentacao,
+  .etiqueta-linha{
+    font-size:11px;
+  }
+
+}
+
+
+/* =========================================================
+   IMPRESSÃƒO ESPECÃFICA DE ETIQUETAS
+========================================================= */
+
+@media print{
+
+  body.imprimindo-etiquetas{
+    background:#ffffff;
+  }
+
+  body.imprimindo-etiquetas #loginScreen,
+  body.imprimindo-etiquetas #appScreen,
+  body.imprimindo-etiquetas #scannerModal{
+    display:none!important;
+  }
+
+  body.imprimindo-etiquetas #etiquetasImpressao{
+    display:block!important;
+  }
+
+  body.imprimindo-etiquetas .etiquetas-folha-a4{
+    width:210mm;
+    min-height:297mm;
+    padding:8mm;
+    margin:0;
+    grid-template-columns:repeat(2, 1fr);
+    gap:4mm;
+  }
+
+  body.imprimindo-etiquetas .etiqueta-impressao{
+    box-shadow:none;
+  }
+
+  body.imprimindo-etiquetas.formato-individual #etiquetasImpressao{
+    width:70mm;
+    margin:0;
+  }
+
+  body.imprimindo-etiquetas.formato-individual .etiquetas-folha-a4{
+    display:block;
+    width:70mm;
+    min-height:0;
+    padding:0;
+  }
+
+  body.imprimindo-etiquetas.formato-individual .etiqueta-impressao{
+    width:70mm;
+    min-height:40mm;
+    margin:0;
+    page-break-after:always;
   }
 
 }
