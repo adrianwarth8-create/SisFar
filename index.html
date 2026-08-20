@@ -187,6 +187,14 @@
 
 
       <button
+        class="nav-btn"
+        data-page="relatorios"
+      >
+        📊 Relatórios
+      </button>
+
+
+      <button
         class="nav-btn gestor-only"
         data-page="usuarios"
       >
@@ -1314,6 +1322,178 @@
           </div>
 
           <div id="etiquetaMsg" class="message hidden"></div>
+
+        </section>
+
+
+        <!-- ===================================================== -->
+        <!-- RELATÓRIOS -->
+        <!-- ===================================================== -->
+
+        <section id="page-relatorios" class="page hidden">
+
+          <div class="panel-head">
+            <h1 class="page-title" style="margin:0">
+              📊 Relatórios
+            </h1>
+          </div>
+
+          <div class="notice">
+            Consulte informações do estoque, lotes, entradas, saídas e movimentações.
+            Use os filtros abaixo e depois clique em <b>Gerar relatório</b>.
+          </div>
+
+          <div class="panel">
+
+            <div class="panel-head">
+              <h3>Filtros do relatório</h3>
+            </div>
+
+            <div class="form-grid">
+
+              <div class="field">
+                <label for="relatorioTipo">Tipo de relatório</label>
+                <select id="relatorioTipo">
+                  <option value="estoque">Estoque atual</option>
+                  <option value="baixo">Estoque baixo</option>
+                  <option value="semEstoque">Produtos sem estoque</option>
+                  <option value="validade">Lotes e validades</option>
+                  <option value="vencendo">Próximos do vencimento</option>
+                  <option value="entradas">Entradas</option>
+                  <option value="saidas">Saídas</option>
+                  <option value="movimentacoes">Movimentações</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="relatorioProduto">Produto</label>
+                <select id="relatorioProduto">
+                  <option value="">Todos os produtos</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="relatorioDataInicial">Data inicial</label>
+                <input id="relatorioDataInicial" type="date">
+              </div>
+
+              <div class="field">
+                <label for="relatorioDataFinal">Data final</label>
+                <input id="relatorioDataFinal" type="date">
+              </div>
+
+              <div class="field">
+                <label for="relatorioBusca">Pesquisar</label>
+                <input
+                  id="relatorioBusca"
+                  type="text"
+                  placeholder="Produto, lote, código, responsável..."
+                >
+              </div>
+
+              <div class="field">
+                <label for="relatorioValidadeDias">Validade</label>
+                <select id="relatorioValidadeDias">
+                  <option value="30">Próximos 30 dias</option>
+                  <option value="60">Próximos 60 dias</option>
+                  <option value="90" selected>Próximos 90 dias</option>
+                  <option value="180">Próximos 180 dias</option>
+                  <option value="365">Próximo ano</option>
+                </select>
+              </div>
+
+              <div class="form-actions">
+                <button
+                  type="button"
+                  id="btnLimparRelatorio"
+                  class="btn btn-secondary"
+                >
+                  🧹 Limpar filtros
+                </button>
+
+                <button
+                  type="button"
+                  id="btnGerarRelatorio"
+                  class="btn btn-primary"
+                >
+                  📊 Gerar relatório
+                </button>
+
+                <button
+                  type="button"
+                  id="btnImprimirRelatorio"
+                  class="btn btn-secondary"
+                >
+                  🖨️ Imprimir
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="cards">
+
+            <div class="card">
+              <div class="stat-label">Registros encontrados</div>
+              <div id="relatorioTotalRegistros" class="stat-value">0</div>
+            </div>
+
+            <div class="card">
+              <div class="stat-label">Quantidade total</div>
+              <div id="relatorioQuantidadeTotal" class="stat-value">0</div>
+            </div>
+
+            <div class="card">
+              <div class="stat-label">Entradas</div>
+              <div id="relatorioTotalEntradas" class="stat-value">0</div>
+            </div>
+
+            <div class="card">
+              <div class="stat-label">Saídas</div>
+              <div id="relatorioTotalSaidas" class="stat-value">0</div>
+            </div>
+
+          </div>
+
+          <div class="panel">
+
+            <div class="panel-head">
+              <div>
+                <h3 id="relatorioTitulo" style="margin:0">
+                  Resultado do relatório
+                </h3>
+                <small id="relatorioPeriodo">
+                  Nenhum relatório gerado.
+                </small>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+
+              <table id="relatorioTabela">
+
+                <thead id="relatorioHead">
+                  <tr>
+                    <th>Informação</th>
+                  </tr>
+                </thead>
+
+                <tbody id="relatorioBody">
+                  <tr>
+                    <td>
+                      Selecione o tipo e clique em Gerar relatório.
+                    </td>
+                  </tr>
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+          <div id="relatorioMsg" class="message hidden"></div>
 
         </section>
 
