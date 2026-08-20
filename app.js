@@ -3603,11 +3603,14 @@ function renderValidades() {
 // ETIQUETAS
 // =========================================================
 
+let etiquetasLista = [];
+
 function preencherSelectEtiquetas() {
   const select = $("etiquetaProduto");
   if (!select) return;
 
   const atual = select.value;
+
   select.innerHTML =
     '<option value="">Selecione...</option>' +
     produtosCache.map(produto => `
@@ -3616,8 +3619,12 @@ function preencherSelectEtiquetas() {
       </option>
     `).join("");
 
-  if (produtosCache.some(p => p.id === atual)) select.value = atual;
+  if (produtosCache.some(p => p.id === atual)) {
+    select.value = atual;
+  }
+
   preencherLotesEtiqueta();
+  renderListaEtiquetas();
 }
 
 function preencherLotesEtiqueta(loteSelecionado = "") {
@@ -3627,103 +3634,529 @@ function preencherLotesEtiqueta(loteSelecionado = "") {
 
   const lotes = lotesCache
     .filter(lote => lote.produtoId === produtoId)
-    .sort((a,b) => (a.validade || "9999").localeCompare(b.validade || "9999"));
+    .sort((a, b) =>
+      (a.validade || "9999").localeCompare(b.validade || "9999")
+    );
 
-  select.innerHTML = '<option value="">Selecione...</option>' + lotes.map(lote => `
-    <option value="${lote.id}">
-      ${esc(lote.lote || "-")} | ${formatDateBR(lote.validade)} | qtd. ${Number(lote.quantidade || 0)}
-    </option>
-  `).join("");
+  select.innerHTML =
+    '<option value="">Selecione...</option>' +
+    lotes.map(lote => `
+      <option value="${lote.id}">
+        ${esc(lote.lote || "-")} | ${formatDateBR(lote.validade)} | qtd. ${Number(lote.quantidade || 0)}
+      </option>
+    `).join("");
 
   if (loteSelecionado && lotes.some(l => l.id === loteSelecionado)) {
     select.value = loteSelecionado;
   }
+
   preencherDadosEtiqueta();
 }
 
 function preencherDadosEtiqueta() {
-  const produto = produtosCache.find(p => p.id === ($("etiquetaProduto")?.value || ""));
-  const lote = lotesCache.find(l => l.id === ($("etiquetaLote")?.value || ""));
+  const produto = produtosCache.find(
+    p => p.id === ($("etiquetaProduto")?.value || "")
+  );
 
-  if ($("etiquetaNome")) $("etiquetaNome").value = produto?.nome || "";
-  if ($("etiquetaApresentacao")) $("etiquetaApresentacao").value = produto?.apresentacao || "";
-  if ($("etiquetaLoteTexto")) $("etiquetaLoteTexto").value = lote?.lote || "";
-  if ($("etiquetaValidade")) $("etiquetaValidade").value = lote?.validade ? formatDateBR(lote.validade) : "";
+  const lote = lotesCache.find(
+    l => l.id === ($("etiquetaLote")?.value || "")
+  );
+
+  if ($("etiquetaNome")) {
+    $("etiquetaNome").value = produto?.nome || "";
+  }
+
+  if ($("etiquetaApresentacao")) {
+    $("etiquetaApresentacao").value = produto?.apresentacao || "";
+  }
+
+  if ($("etiquetaLoteTexto")) {
+    $("etiquetaLoteTexto").value = lote?.lote || "";
+  }
+
+  if ($("etiquetaValidade")) {
+    $("etiquetaValidade").value =
+      lote?.validade ? formatDateBR(lote.validade) : "";
+  }
+
   atualizarPreviewEtiqueta();
 }
 
 function atualizarPreviewEtiqueta() {
-  if ($("previewEtiquetaNome")) $("previewEtiquetaNome").textContent = $("etiquetaNome")?.value || "NOME DO PRODUTO";
-  if ($("previewEtiquetaApresentacao")) $("previewEtiquetaApresentacao").textContent = $("etiquetaApresentacao")?.value || "Apresentação";
-  if ($("previewEtiquetaLote")) $("previewEtiquetaLote").textContent = $("etiquetaLoteTexto")?.value || "-";
-  if ($("previewEtiquetaValidade")) $("previewEtiquetaValidade").textContent = $("etiquetaValidade")?.value || "-";
+  if ($("previewEtiquetaNome")) {
+    $("previewEtiquetaNome").textContent =
+      $("etiquetaNome")?.value || "NOME DO PRODUTO";
+  }
+
+  if ($("previewEtiquetaApresentacao")) {
+    $("previewEtiquetaApresentacao").textContent =
+      $("etiquetaApresentacao")?.value || "Apresentação";
+  }
+
+  if ($("previewEtiquetaLote")) {
+    $("previewEtiquetaLote").textContent =
+      $("etiquetaLoteTexto")?.value || "-";
+  }
+
+  if ($("previewEtiquetaValidade")) {
+    $("previewEtiquetaValidade").textContent =
+      $("etiquetaValidade")?.value || "-";
+  }
 }
 
-$("etiquetaProduto")?.addEventListener("change", () => preencherLotesEtiqueta());
-$("etiquetaLote")?.addEventListener("change", preencherDadosEtiqueta);
-$("btnVisualizarEtiqueta")?.addEventListener("click", atualizarPreviewEtiqueta);
+function limparCamposEtiqueta() {
+  if ($("etiquetaProduto")) {
+    $("etiquetaProduto").value = "";
+  }
 
-$("btnLimparEtiqueta")?.addEventListener("click", () => {
-  if ($("etiquetaProduto")) $("etiquetaProduto").value = "";
-  if ($("etiquetaLote")) $("etiquetaLote").innerHTML = '<option value="">Selecione primeiro o produto...</option>';
-  ["etiquetaNome","etiquetaApresentacao","etiquetaLoteTexto","etiquetaValidade"].forEach(id => { if ($(id)) $(id).value = ""; });
-  if ($("etiquetaQuantidade")) $("etiquetaQuantidade").value = "1";
+  if ($("etiquetaLote")) {
+    $("etiquetaLote").innerHTML =
+      '<option value="">Selecione primeiro o produto...</option>';
+  }
+
+  [
+    "etiquetaNome",
+    "etiquetaApresentacao",
+    "etiquetaLoteTexto",
+    "etiquetaValidade"
+  ].forEach(id => {
+    if ($(id)) {
+      $(id).value = "";
+    }
+  });
+
+  if ($("etiquetaQuantidade")) {
+    $("etiquetaQuantidade").value = "1";
+  }
+
   atualizarPreviewEtiqueta();
-  hideMsg($("etiquetaMsg"));
-});
-
-function htmlEtiqueta() {
-  const nome = esc($("etiquetaNome")?.value || "");
-  const apresentacao = esc($("etiquetaApresentacao")?.value || "");
-  const lote = esc($("etiquetaLoteTexto")?.value || "");
-  const validade = esc($("etiquetaValidade")?.value || "");
-  return `<div class="print-label"><div class="sisfar">SISFAR V2</div><div class="nome">${nome}</div>${apresentacao ? `<div class="apresentacao">${apresentacao}</div>` : ""}<div><b>Lote:</b> ${lote}</div><div><b>Validade:</b> ${validade}</div></div>`;
 }
 
-function imprimirEtiquetas() {
-  const produtoId = $("etiquetaProduto")?.value;
-  const loteId = $("etiquetaLote")?.value;
-  const quantidade = Math.max(1, Math.min(100, Number($("etiquetaQuantidade")?.value || 1)));
-  const formato = $("etiquetaFormato")?.value || "a4";
+function obterEtiquetaSelecionada() {
+  const produtoId = $("etiquetaProduto")?.value || "";
+  const loteId = $("etiquetaLote")?.value || "";
+  const quantidade = Math.max(
+    1,
+    Math.min(
+      100,
+      Number($("etiquetaQuantidade")?.value || 1)
+    )
+  );
 
-  if (!produtoId || !loteId) {
-    showMsg($("etiquetaMsg"), "Selecione o produto e o lote antes de imprimir.");
+  const produto = produtosCache.find(p => p.id === produtoId);
+  const lote = lotesCache.find(l => l.id === loteId);
+
+  if (!produto || !lote) {
+    return null;
+  }
+
+  return {
+    chave: `${produto.id}__${lote.id}`,
+    produtoId: produto.id,
+    loteId: lote.id,
+    nome: produto.nome || "",
+    apresentacao: produto.apresentacao || "",
+    lote: lote.lote || "",
+    validadeISO: lote.validade || "",
+    validade: lote.validade ? formatDateBR(lote.validade) : "",
+    quantidade
+  };
+}
+
+function adicionarEtiquetaLista() {
+  hideMsg($("etiquetaMsg"));
+
+  const item = obterEtiquetaSelecionada();
+
+  if (!item) {
+    showMsg(
+      $("etiquetaMsg"),
+      "Selecione o produto e o lote antes de adicionar à lista."
+    );
+    return;
+  }
+
+  const existente = etiquetasLista.find(
+    etiqueta => etiqueta.chave === item.chave
+  );
+
+  if (existente) {
+    existente.quantidade = Math.min(
+      999,
+      Number(existente.quantidade || 0) + item.quantidade
+    );
+  } else {
+    etiquetasLista.push(item);
+  }
+
+  renderListaEtiquetas();
+
+  showMsg(
+    $("etiquetaMsg"),
+    `${item.quantidade} etiqueta(s) adicionada(s) à lista.`,
+    "ok"
+  );
+
+  if ($("etiquetaQuantidade")) {
+    $("etiquetaQuantidade").value = "1";
+  }
+}
+
+function renderListaEtiquetas() {
+  const body = $("etiquetaListaBody");
+
+  if (!body) {
+    return;
+  }
+
+  const totalItens = etiquetasLista.length;
+
+  const totalQuantidade = etiquetasLista.reduce(
+    (total, item) =>
+      total + Number(item.quantidade || 0),
+    0
+  );
+
+  if ($("etiquetaTotalItens")) {
+    $("etiquetaTotalItens").textContent = totalItens;
+  }
+
+  if ($("etiquetaTotalQuantidade")) {
+    $("etiquetaTotalQuantidade").textContent = totalQuantidade;
+  }
+
+  if (!etiquetasLista.length) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="6">
+          Nenhuma etiqueta adicionada à lista.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  body.innerHTML = etiquetasLista.map((item, indice) => `
+    <tr>
+      <td>${esc(item.nome || "-")}</td>
+      <td>${esc(item.apresentacao || "-")}</td>
+      <td>${esc(item.lote || "-")}</td>
+      <td>${esc(item.validade || "-")}</td>
+      <td>
+        <input
+          type="number"
+          min="1"
+          max="999"
+          value="${Number(item.quantidade || 1)}"
+          style="width:90px"
+          onchange="alterarQuantidadeEtiqueta(${indice}, this.value)"
+        >
+      </td>
+      <td>
+        <button
+          type="button"
+          class="btn btn-danger"
+          onclick="removerEtiquetaLista(${indice})"
+        >
+          🗑️ Remover
+        </button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+window.alterarQuantidadeEtiqueta = (indice, valor) => {
+  const quantidade = Math.max(
+    1,
+    Math.min(999, Number(valor || 1))
+  );
+
+  if (!etiquetasLista[indice]) {
+    return;
+  }
+
+  etiquetasLista[indice].quantidade = quantidade;
+  renderListaEtiquetas();
+};
+
+window.removerEtiquetaLista = (indice) => {
+  if (!etiquetasLista[indice]) {
+    return;
+  }
+
+  etiquetasLista.splice(indice, 1);
+  renderListaEtiquetas();
+
+  showMsg(
+    $("etiquetaMsg"),
+    "Etiqueta removida da lista.",
+    "ok"
+  );
+};
+
+function limparListaEtiquetas() {
+  if (!etiquetasLista.length) {
+    return;
+  }
+
+  if (!confirm("Limpar toda a lista de etiquetas?")) {
+    return;
+  }
+
+  etiquetasLista = [];
+  renderListaEtiquetas();
+
+  showMsg(
+    $("etiquetaMsg"),
+    "Lista de etiquetas limpa.",
+    "ok"
+  );
+}
+
+function htmlEtiquetaDados(item) {
+  const nome = esc(item.nome || "");
+  const apresentacao = esc(item.apresentacao || "");
+  const lote = esc(item.lote || "");
+  const validade = esc(item.validade || "");
+
+  return `
+    <div class="print-label">
+      <div class="sisfar">SISFAR V2</div>
+      <div class="nome">${nome}</div>
+      ${apresentacao ? `<div class="apresentacao">${apresentacao}</div>` : ""}
+      <div><b>Lote:</b> ${lote}</div>
+      <div><b>Validade:</b> ${validade}</div>
+    </div>
+  `;
+}
+
+function abrirJanelaImpressao(itens, formato = "a4") {
+  const individual = formato === "individual";
+
+  const etiquetas = itens.map(item =>
+    Array.from(
+      { length: Math.max(1, Number(item.quantidade || 1)) },
+      () => htmlEtiquetaDados(item)
+    ).join("")
+  ).join("");
+
+  const total = itens.reduce(
+    (soma, item) =>
+      soma + Math.max(1, Number(item.quantidade || 1)),
+    0
+  );
+
+  const janela = window.open("", "_blank");
+
+  if (!janela) {
+    showMsg(
+      $("etiquetaMsg"),
+      "O navegador bloqueou a janela de impressão. Autorize pop-ups e tente novamente."
+    );
+    return false;
+  }
+
+  janela.document.write(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>Etiquetas SISFAR</title>
+      <style>
+        @page {
+          size: ${individual ? "60mm 40mm" : "A4"};
+          margin: ${individual ? "0" : "8mm"};
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          color: #000;
+        }
+
+        .sheet {
+          display: ${individual ? "block" : "grid"};
+          grid-template-columns: ${individual ? "1fr" : "repeat(3, 1fr)"};
+          gap: ${individual ? "0" : "4mm"};
+        }
+
+        .print-label {
+          width: ${individual ? "60mm" : "100%"};
+          height: ${individual ? "40mm" : "35mm"};
+          border: 1px solid #000;
+          padding: 3mm;
+          overflow: hidden;
+          break-inside: avoid;
+          page-break-inside: avoid;
+          ${individual ? "page-break-after: always;" : ""}
+        }
+
+        .sisfar {
+          text-align: center;
+          font-weight: 700;
+          font-size: 9pt;
+          border-bottom: 1px solid #000;
+          margin-bottom: 2mm;
+          padding-bottom: 1mm;
+        }
+
+        .nome {
+          font-weight: 700;
+          font-size: 11pt;
+          text-transform: uppercase;
+          white-space: normal;
+        }
+
+        .apresentacao {
+          font-size: 9pt;
+          margin: 1mm 0 2mm;
+        }
+
+        .print-label div {
+          line-height: 1.2;
+        }
+
+        @media print {
+          button {
+            display: none;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="sheet">${etiquetas}</div>
+      <script>
+        window.onload = () => {
+          window.print();
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+
+  janela.document.close();
+
+  showMsg(
+    $("etiquetaMsg"),
+    `${total} etiqueta(s) preparada(s) para impressão.`,
+    "ok"
+  );
+
+  return true;
+}
+
+function imprimirEtiquetaSelecionada() {
+  const item = obterEtiquetaSelecionada();
+
+  if (!item) {
+    showMsg(
+      $("etiquetaMsg"),
+      "Selecione o produto e o lote antes de imprimir."
+    );
     return;
   }
 
   preencherDadosEtiqueta();
-  const etiquetas = Array.from({length: quantidade}, htmlEtiqueta).join("");
-  const individual = formato === "individual";
-  const janela = window.open("", "_blank");
-  if (!janela) {
-    showMsg($("etiquetaMsg"), "O navegador bloqueou a janela de impressão. Autorize pop-ups e tente novamente.");
+
+  abrirJanelaImpressao(
+    [item],
+    $("etiquetaFormato")?.value || "a4"
+  );
+}
+
+function imprimirTodasEtiquetas() {
+  if (!etiquetasLista.length) {
+    showMsg(
+      $("etiquetaMsg"),
+      "Adicione pelo menos uma etiqueta à lista antes de imprimir."
+    );
     return;
   }
 
-  janela.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Etiquetas SISFAR</title><style>
-    @page { size: ${individual ? "60mm 40mm" : "A4"}; margin: ${individual ? "0" : "8mm"}; }
-    *{box-sizing:border-box} body{font-family:Arial,sans-serif;margin:0;color:#000}
-    .sheet{display:${individual ? "block" : "grid"};grid-template-columns:${individual ? "1fr" : "repeat(3, 1fr)"};gap:${individual ? "0" : "4mm"}}
-    .print-label{width:${individual ? "60mm" : "100%"};height:${individual ? "40mm" : "35mm"};border:1px solid #000;padding:3mm;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
-    .sisfar{text-align:center;font-weight:700;font-size:9pt;border-bottom:1px solid #000;margin-bottom:2mm;padding-bottom:1mm}
-    .nome{font-weight:700;font-size:11pt;text-transform:uppercase;white-space:normal}.apresentacao{font-size:9pt;margin:1mm 0 2mm} .print-label div{line-height:1.2}
-    @media print{button{display:none}}
-  </style></head><body><div class="sheet">${etiquetas}</div><script>window.onload=()=>{window.print();};<\/script></body></html>`);
-  janela.document.close();
-  showMsg($("etiquetaMsg"), `${quantidade} etiqueta(s) preparada(s) para impressão.`, "ok");
+  abrirJanelaImpressao(
+    etiquetasLista,
+    $("etiquetaFormato")?.value || "a4"
+  );
 }
 
-$("btnImprimirEtiqueta")?.addEventListener("click", imprimirEtiquetas);
+$("etiquetaProduto")
+  ?.addEventListener(
+    "change",
+    () => preencherLotesEtiqueta()
+  );
+
+$("etiquetaLote")
+  ?.addEventListener(
+    "change",
+    preencherDadosEtiqueta
+  );
+
+$("btnVisualizarEtiqueta")
+  ?.addEventListener(
+    "click",
+    atualizarPreviewEtiqueta
+  );
+
+$("btnLimparEtiqueta")
+  ?.addEventListener(
+    "click",
+    () => {
+      limparCamposEtiqueta();
+      hideMsg($("etiquetaMsg"));
+    }
+  );
+
+$("btnAdicionarEtiqueta")
+  ?.addEventListener(
+    "click",
+    adicionarEtiquetaLista
+  );
+
+$("btnImprimirEtiqueta")
+  ?.addEventListener(
+    "click",
+    imprimirEtiquetaSelecionada
+  );
+
+$("btnImprimirTodasEtiquetas")
+  ?.addEventListener(
+    "click",
+    imprimirTodasEtiquetas
+  );
+
+$("btnLimparListaEtiquetas")
+  ?.addEventListener(
+    "click",
+    limparListaEtiquetas
+  );
 
 window.gerarEtiquetaLote = (loteId) => {
-  const lote = lotesCache.find(item => item.id === loteId);
-  if (!lote) return;
+  const lote = lotesCache.find(
+    item => item.id === loteId
+  );
+
+  if (!lote) {
+    return;
+  }
+
   abrirPagina("etiquetas");
   preencherSelectEtiquetas();
-  if ($("etiquetaProduto")) $("etiquetaProduto").value = lote.produtoId;
+
+  if ($("etiquetaProduto")) {
+    $("etiquetaProduto").value = lote.produtoId;
+  }
+
   preencherLotesEtiqueta(lote.id);
   preencherDadosEtiqueta();
-  window.scrollTo({top:0, behavior:"smooth"});
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 };
 
 
