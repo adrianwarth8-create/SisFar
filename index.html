@@ -125,12 +125,14 @@
 
       </div>
 
+
       <button
         class="nav-btn active"
         data-page="dashboard"
       >
         🏠 Dashboard
       </button>
+
 
       <button
         class="nav-btn"
@@ -139,12 +141,14 @@
         📦 Estoque
       </button>
 
+
       <button
         class="nav-btn perm-operacao"
         data-page="entrada"
       >
         ➕ Entrada
       </button>
+
 
       <button
         class="nav-btn perm-operacao"
@@ -153,12 +157,14 @@
         ➖ Baixa / Saída
       </button>
 
+
       <button
         class="nav-btn"
         data-page="movimentacoes"
       >
         🔄 Movimentações
       </button>
+
 
       <button
         class="nav-btn"
@@ -167,12 +173,26 @@
         📅 Lotes e Validades
       </button>
 
+
+      <!-- =================================================== -->
+      <!-- NOVO - ETIQUETAS -->
+      <!-- =================================================== -->
+
+      <button
+        class="nav-btn"
+        data-page="etiquetas"
+      >
+        🏷️ Etiquetas
+      </button>
+
+
       <button
         class="nav-btn gestor-only"
         data-page="usuarios"
       >
         👥 Usuários
       </button>
+
 
       <button
         class="nav-btn"
@@ -205,6 +225,7 @@
 
         </div>
 
+
         <div class="top-user">
 
           <strong id="userName">
@@ -236,7 +257,9 @@
             Dashboard
           </h1>
 
+
           <div class="cards">
+
 
             <div class="card">
 
@@ -253,6 +276,7 @@
 
             </div>
 
+
             <div class="card">
 
               <div class="stat-label">
@@ -268,6 +292,7 @@
 
             </div>
 
+
             <div class="card">
 
               <div class="stat-label">
@@ -282,6 +307,7 @@
               </div>
 
             </div>
+
 
             <div class="card">
 
@@ -318,6 +344,7 @@
 
             </div>
 
+
             <div class="table-wrap">
 
               <table>
@@ -339,6 +366,7 @@
                   </tr>
 
                 </thead>
+
 
                 <tbody id="dashboardAlertas">
                 </tbody>
@@ -370,6 +398,7 @@
               Estoque
             </h1>
 
+
             <button
               id="btnNovoProduto"
               class="btn btn-primary perm-operacao"
@@ -389,15 +418,18 @@
               Cadastrar produto
             </h3>
 
+
             <form
               id="produtoForm"
               class="form-grid"
             >
 
+
               <input
                 type="hidden"
                 id="produtoId"
               >
+
 
               <div class="field">
 
@@ -513,6 +545,7 @@
                   Cancelar
                 </button>
 
+
                 <button
                   type="submit"
                   class="btn btn-primary"
@@ -537,6 +570,7 @@
               >
 
             </div>
+
 
             <div class="table-wrap">
 
@@ -566,6 +600,7 @@
 
                 </thead>
 
+
                 <tbody id="estoqueBody">
                 </tbody>
 
@@ -591,11 +626,16 @@
             Entrada de estoque
           </h1>
 
+
           <div class="panel">
 
             <div class="notice">
-              Você pode selecionar o produto manualmente ou usar a câmera do celular para ler o código de barras.
+
+              Você pode selecionar o produto manualmente ou usar a câmera
+              do celular para ler o código de barras.
+
             </div>
+
 
             <form
               id="entradaForm"
@@ -732,6 +772,7 @@
 
             </form>
 
+
             <div
               id="entradaMsg"
               class="message hidden"
@@ -756,11 +797,18 @@
             Baixa / Saída
           </h1>
 
+
           <div class="notice">
-            O sistema apresenta os lotes em ordem de validade, ajudando a aplicar FEFO: primeiro que vence, primeiro que sai.
+
+            O sistema apresenta os lotes em ordem de validade,
+            ajudando a aplicar FEFO: primeiro que vence,
+            primeiro que sai.
+
           </div>
 
+
           <div class="panel">
+
 
             <form
               id="baixaForm"
@@ -926,6 +974,7 @@
 
             </form>
 
+
             <div
               id="baixaMsg"
               class="message hidden"
@@ -950,9 +999,11 @@
             Movimentações
           </h1>
 
+
           <div class="panel">
 
             <div class="toolbar">
+
 
               <select id="movTipoFiltro">
 
@@ -970,12 +1021,14 @@
 
               </select>
 
+
               <input
                 id="movBusca"
                 placeholder="Pesquisar produto, lote ou responsável..."
               >
 
             </div>
+
 
             <div class="table-wrap">
 
@@ -1003,6 +1056,7 @@
 
                 </thead>
 
+
                 <tbody id="movBody">
                 </tbody>
 
@@ -1028,7 +1082,16 @@
             Lotes e Validades
           </h1>
 
+
           <div class="panel">
+
+            <div class="notice">
+
+              Consulte os lotes disponíveis e gere etiquetas
+              diretamente para o lote desejado.
+
+            </div>
+
 
             <div class="table-wrap">
 
@@ -1048,9 +1111,12 @@
 
                     <th>Status</th>
 
+                    <th>Ações</th>
+
                   </tr>
 
                 </thead>
+
 
                 <tbody id="validadeBody">
                 </tbody>
@@ -1059,6 +1125,309 @@
 
             </div>
 
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================== -->
+        <!-- ETIQUETAS -->
+        <!-- ===================================================== -->
+
+        <section
+          id="page-etiquetas"
+          class="page hidden"
+        >
+
+          <div class="panel-head">
+
+            <h1
+              class="page-title"
+              style="margin:0"
+            >
+              🏷️ Gerador de Etiquetas
+            </h1>
+
+          </div>
+
+
+          <div class="notice">
+
+            Selecione o produto e o lote.
+            O SISFAR preencherá automaticamente os dados da etiqueta.
+
+          </div>
+
+
+          <!-- =================================================== -->
+          <!-- FORMULÁRIO -->
+          <!-- =================================================== -->
+
+          <div class="panel">
+
+            <div class="panel-head">
+
+              <h3>
+                Dados da etiqueta
+              </h3>
+
+            </div>
+
+
+            <div class="form-grid">
+
+
+              <div class="field">
+
+                <label for="etiquetaProduto">
+                  Produto
+                </label>
+
+                <select id="etiquetaProduto">
+
+                  <option value="">
+                    Selecione...
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div class="field">
+
+                <label for="etiquetaLote">
+                  Lote
+                </label>
+
+                <select id="etiquetaLote">
+
+                  <option value="">
+                    Selecione primeiro o produto...
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div class="field">
+
+                <label for="etiquetaNome">
+                  Nome
+                </label>
+
+                <input
+                  id="etiquetaNome"
+                  type="text"
+                  readonly
+                  placeholder="Nome do produto"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label for="etiquetaApresentacao">
+                  Apresentação
+                </label>
+
+                <input
+                  id="etiquetaApresentacao"
+                  type="text"
+                  readonly
+                  placeholder="Apresentação do produto"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label for="etiquetaLoteTexto">
+                  Lote
+                </label>
+
+                <input
+                  id="etiquetaLoteTexto"
+                  type="text"
+                  readonly
+                  placeholder="Lote"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label for="etiquetaValidade">
+                  Validade
+                </label>
+
+                <input
+                  id="etiquetaValidade"
+                  type="text"
+                  readonly
+                  placeholder="Validade"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label for="etiquetaQuantidade">
+                  Quantidade de etiquetas
+                </label>
+
+                <input
+                  id="etiquetaQuantidade"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value="1"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label for="etiquetaFormato">
+                  Formato de impressão
+                </label>
+
+                <select id="etiquetaFormato">
+
+                  <option value="a4">
+                    Folha A4
+                  </option>
+
+                  <option value="individual">
+                    Etiqueta individual
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div class="form-actions">
+
+
+                <button
+                  type="button"
+                  id="btnLimparEtiqueta"
+                  class="btn btn-secondary"
+                >
+                  🧹 Limpar
+                </button>
+
+
+                <button
+                  type="button"
+                  id="btnVisualizarEtiqueta"
+                  class="btn btn-secondary"
+                >
+                  👁️ Visualizar
+                </button>
+
+
+                <button
+                  type="button"
+                  id="btnImprimirEtiqueta"
+                  class="btn btn-primary"
+                >
+                  🖨️ Imprimir
+                </button>
+
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- =================================================== -->
+          <!-- PRÉ-VISUALIZAÇÃO -->
+          <!-- =================================================== -->
+
+          <div class="panel">
+
+            <div class="panel-head">
+
+              <h3>
+                Pré-visualização
+              </h3>
+
+            </div>
+
+
+            <div
+              id="etiquetaPreviewArea"
+              class="etiqueta-preview-area"
+            >
+
+              <div
+                id="etiquetaPreview"
+                class="etiqueta-preview"
+              >
+
+                <div class="etiqueta-sistema">
+                  SISFAR V2
+                </div>
+
+                <div
+                  id="previewEtiquetaNome"
+                  class="etiqueta-nome"
+                >
+                  NOME DO PRODUTO
+                </div>
+
+                <div
+                  id="previewEtiquetaApresentacao"
+                  class="etiqueta-apresentacao"
+                >
+                  Apresentação
+                </div>
+
+                <div class="etiqueta-linha">
+
+                  <strong>
+                    Lote:
+                  </strong>
+
+                  <span id="previewEtiquetaLote">
+                    -
+                  </span>
+
+                </div>
+
+                <div class="etiqueta-linha">
+
+                  <strong>
+                    Validade:
+                  </strong>
+
+                  <span id="previewEtiquetaValidade">
+                    -
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div
+            id="etiquetaMsg"
+            class="message hidden"
+          >
           </div>
 
         </section>
@@ -1077,9 +1446,14 @@
             Usuários
           </h1>
 
+
           <div class="notice">
-            Os usuários são criados pelo Firebase Authentication e recebem o perfil na coleção <b>usuarios</b>.
+
+            Os usuários são criados pelo Firebase Authentication
+            e recebem o perfil na coleção <b>usuarios</b>.
+
           </div>
+
 
           <div class="panel">
 
@@ -1102,6 +1476,7 @@
                   </tr>
 
                 </thead>
+
 
                 <tbody id="usuariosBody">
                 </tbody>
@@ -1133,6 +1508,7 @@
 
     <div class="scanner-box">
 
+
       <div class="scanner-head">
 
         <div>
@@ -1146,6 +1522,7 @@
           </p>
 
         </div>
+
 
         <button
           type="button"
@@ -1168,6 +1545,7 @@
         >
         </video>
 
+
         <div class="scanner-mira">
 
           <div class="scanner-linha">
@@ -1184,6 +1562,7 @@
       >
         Preparando câmera...
       </div>
+
 
     </div>
 
