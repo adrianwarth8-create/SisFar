@@ -844,6 +844,9 @@ function abrirPagina(
     etiquetas:
       "Etiquetas",
 
+    relatorios:
+      "Relatórios",
+
     usuarios:
       "Usuários"
 
@@ -944,6 +947,18 @@ function abrirPagina(
   if (
     page
     ===
+    "relatorios"
+  ) {
+
+    preencherSelectRelatorios();
+    gerarRelatorio();
+
+  }
+
+
+  if (
+    page
+    ===
     "usuarios"
     &&
     isGestor()
@@ -984,6 +999,8 @@ async function carregarTudo() {
   renderValidades();
 
   preencherSelectEtiquetas();
+
+  preencherSelectRelatorios();
 
 }
 
@@ -4311,6 +4328,301 @@ async function carregarUsuarios() {
   }
 
 }
+
+
+// =========================================================
+// RELATÓRIOS
+// =========================================================
+
+function preencherSelectRelatorios() {
+  const select = $("relatorioProduto");
+  if (!select) return;
+
+  const atual = select.value;
+  select.innerHTML =
+    '<option value="">Todos os produtos</option>' +
+    produtosCache.map(produto => `
+      <option value="${produto.id}">
+        ${esc(produto.nome || "-")}${produto.apresentacao ? ` - ${esc(produto.apresentacao)}` : ""}
+      </option>
+    `).join("");
+
+  if (produtosCache.some(p => p.id === atual)) {
+    select.value = atual;
+  }
+}
+
+function dataMovDate(movimento) {
+  if (movimento?.criadoEm?.toDate) return movimento.criadoEm.toDate();
+  if (movimento?.criadoEm?.seconds) return new Date(movimento.criadoEm.seconds * 1000);
+  if (movimento?.criadoEm instanceof Date) return movimento.criadoEm;
+  return null;
+}
+
+function dataDentroPeriodo(data, inicial, final) {
+  if (!data) return !inicial && !final;
+  const d = new Date(data);
+  d.setHours(0, 0, 0, 0);
+
+  if (inicial) {
+    const ini = new Date(`${inicial}T00:00:00`);
+    if (d < ini) return false;
+  }
+
+  if (final) {
+    const fim = new Date(`${final}T23:59:59`);
+    if (d > fim) return false;
+  }
+
+  return true;
+}
+
+function textoBuscaRelatorio(valores, busca) {
+  if (!busca) return true;
+  return valores
+    .map(v => String(v ?? ""))
+    .join(" ")
+    .toLowerCase()
+    .includes(busca);
+}
+
+function statusValidadeRelatorio(validade) {
+  const dias = diasAte(validade);
+  if (dias < 0) return "Vencido";
+  if (dias <= 30) return "Vence em até 30 dias";
+  if (dias <= 90) return "Vence em até 90 dias";
+  return "Regular";
+}
+
+function atualizarResumoRelatorio(registros, quantidade, entradas = 0, saidas = 0) {
+  if ($("relatorioTotalRegistros")) $("relatorioTotalRegistros").textContent = registros;
+  if ($("relatorioQuantidadeTotal")) $("relatorioQuantidadeTotal").textContent = quantidade;
+  if ($("relatorioTotalEntradas")) $("relatorioTotalEntradas").textContent = entradas;
+  if ($("relatorioTotalSaidas")) $("relatorioTotalSaidas").textContent = saidas;
+}
+
+function gerarRelatorio() {
+  const tipo = $("relatorioTipo")?.value || "estoque";
+  const produtoId = $("relatorioProduto")?.value || "";
+  const inicial = $("relatorioDataInicial")?.value || "";
+  const final = $("relatorioDataFinal")?.value || "";
+  const busca = ($("relatorioBusca")?.value || "").trim().toLowerCase();
+  const diasValidade = Number($("relatorioValidadeDias")?.value || 90);
+
+  const head = $("relatorioHead");
+  const body = $("relatorioBody");
+  if (!head || !body) return;
+
+  hideMsg($("relatorioMsg"));
+
+  const nomes = {
+    estoque: "Estoque atual",
+    baixo: "Estoque baixo",
+    semEstoque: "Produtos sem estoque",
+    validade: "Lotes e validades",
+    vencendo: "Próximos do vencimento",
+    entradas: "Entradas",
+    saidas: "Saídas",
+    movimentacoes: "Movimentações"
+  };
+
+  if ($("relatorioTitulo")) $("relatorioTitulo").textContent = nomes[tipo] || "Relatório";
+  if ($("relatorioPeriodo")) {
+    const periodo = inicial || final
+      ? `Período: ${inicial ? formatDateBR(inicial) : "início"} até ${final ? formatDateBR(final) : "hoje"}`
+      : "Todos os registros disponíveis";
+    $("relatorioPeriodo").textContent = periodo;
+  }
+
+  if (["estoque", "baixo", "semEstoque"].includes(tipo)) {
+    let lista = produtosCache.map(produto => ({
+      ...produto,
+      total: totalProduto(produto.id)
+    }));
+
+    if (produtoId) lista = lista.filter(p => p.id === produtoId);
+    if (tipo === "baixo") lista = lista.filter(p => p.total <= Number(p.estoqueMinimo || 0));
+    if (tipo === "semEstoque") lista = lista.filter(p => p.total <= 0);
+    lista = lista.filter(p => textoBuscaRelatorio([
+      p.nome, p.codigoBarras, p.apresentacao, p.categoria, p.unidade, p.localizacao
+    ], busca));
+
+    head.innerHTML = `<tr>
+      <th>Produto</th><th>Código</th><th>Apresentação</th><th>Unidade</th>
+      <th>Quantidade</th><th>Mínimo</th><th>Situação</th>
+    </tr>`;
+
+    body.innerHTML = lista.length ? lista.map(p => `
+      <tr>
+        <td>${esc(p.nome || "-")}</td>
+        <td>${esc(p.codigoBarras || "-")}</td>
+        <td>${esc(p.apresentacao || "-")}</td>
+        <td>${esc(p.unidade || "-")}</td>
+        <td>${Number(p.total || 0)}</td>
+        <td>${Number(p.estoqueMinimo || 0)}</td>
+        <td>${p.total <= 0 ? '<span class="badge danger">Sem estoque</span>' : p.total <= Number(p.estoqueMinimo || 0) ? '<span class="badge warning">Baixo</span>' : '<span class="badge ok">Normal</span>'}</td>
+      </tr>
+    `).join("") : '<tr><td colspan="7">Nenhum registro encontrado.</td></tr>';
+
+    atualizarResumoRelatorio(
+      lista.length,
+      lista.reduce((t, p) => t + Number(p.total || 0), 0),
+      0,
+      0
+    );
+    return;
+  }
+
+  if (["validade", "vencendo"].includes(tipo)) {
+    let lista = lotesCache.map(lote => {
+      const produto = produtosCache.find(p => p.id === lote.produtoId);
+      return { ...lote, produto };
+    });
+
+    if (produtoId) lista = lista.filter(l => l.produtoId === produtoId);
+    if (tipo === "vencendo") {
+      lista = lista.filter(l => {
+        const dias = diasAte(l.validade);
+        return Number(l.quantidade || 0) > 0 && dias >= 0 && dias <= diasValidade;
+      });
+    }
+    lista = lista.filter(l => textoBuscaRelatorio([
+      l.produto?.nome, l.produto?.codigoBarras, l.lote, l.validade, l.produto?.apresentacao
+    ], busca));
+    lista.sort((a, b) => (a.validade || "9999").localeCompare(b.validade || "9999"));
+
+    head.innerHTML = `<tr>
+      <th>Produto</th><th>Lote</th><th>Validade</th><th>Quantidade</th><th>Status</th>
+    </tr>`;
+    body.innerHTML = lista.length ? lista.map(l => `
+      <tr>
+        <td>${esc(l.produto?.nome || "-")}</td>
+        <td>${esc(l.lote || "-")}</td>
+        <td>${formatDateBR(l.validade)}</td>
+        <td>${Number(l.quantidade || 0)}</td>
+        <td>${esc(statusValidadeRelatorio(l.validade))}</td>
+      </tr>
+    `).join("") : '<tr><td colspan="5">Nenhum lote encontrado.</td></tr>';
+
+    atualizarResumoRelatorio(
+      lista.length,
+      lista.reduce((t, l) => t + Number(l.quantidade || 0), 0),
+      0,
+      0
+    );
+    return;
+  }
+
+  let lista = movimentosCache.filter(m => {
+    if (tipo === "entradas" && m.tipo !== "entrada") return false;
+    if (tipo === "saidas" && m.tipo !== "saida") return false;
+    if (produtoId && m.produtoId !== produtoId) return false;
+    if (!dataDentroPeriodo(dataMovDate(m), inicial, final)) return false;
+    return textoBuscaRelatorio([
+      m.produtoNome, m.codigoBarras, m.lote, m.responsavelNome,
+      m.destino, m.origem, m.motivo, m.observacao
+    ], busca);
+  });
+
+  head.innerHTML = `<tr>
+    <th>Data/Hora</th><th>Tipo</th><th>Produto</th><th>Lote</th>
+    <th>Quantidade</th><th>Destino/Origem</th><th>Responsável</th>
+  </tr>`;
+  body.innerHTML = lista.length ? lista.map(m => `
+    <tr>
+      <td>${dataMov(m)}</td>
+      <td>${m.tipo === "entrada" ? "Entrada" : "Saída"}</td>
+      <td>${esc(m.produtoNome || "-")}</td>
+      <td>${esc(m.lote || "-")}</td>
+      <td>${Number(m.quantidade || 0)}</td>
+      <td>${esc(m.destino || m.origem || "-")}</td>
+      <td>${esc(m.responsavelNome || "-")}</td>
+    </tr>
+  `).join("") : '<tr><td colspan="7">Nenhuma movimentação encontrada.</td></tr>';
+
+  const entradas = lista
+    .filter(m => m.tipo === "entrada")
+    .reduce((t, m) => t + Number(m.quantidade || 0), 0);
+  const saidas = lista
+    .filter(m => m.tipo === "saida")
+    .reduce((t, m) => t + Number(m.quantidade || 0), 0);
+
+  atualizarResumoRelatorio(
+    lista.length,
+    lista.reduce((t, m) => t + Number(m.quantidade || 0), 0),
+    entradas,
+    saidas
+  );
+}
+
+function limparFiltrosRelatorio() {
+  if ($("relatorioTipo")) $("relatorioTipo").value = "estoque";
+  if ($("relatorioProduto")) $("relatorioProduto").value = "";
+  if ($("relatorioDataInicial")) $("relatorioDataInicial").value = "";
+  if ($("relatorioDataFinal")) $("relatorioDataFinal").value = "";
+  if ($("relatorioBusca")) $("relatorioBusca").value = "";
+  if ($("relatorioValidadeDias")) $("relatorioValidadeDias").value = "90";
+  gerarRelatorio();
+}
+
+function imprimirRelatorio() {
+  const tabela = $("relatorioTabela");
+  if (!tabela) return;
+
+  const titulo = $("relatorioTitulo")?.textContent || "Relatório SISFAR V2";
+  const periodo = $("relatorioPeriodo")?.textContent || "";
+  const janela = window.open("", "_blank", "width=1100,height=800");
+
+  if (!janela) {
+    alert("O navegador bloqueou a janela de impressão. Autorize pop-ups e tente novamente.");
+    return;
+  }
+
+  janela.document.write(`<!DOCTYPE html>
+  <html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <title>${esc(titulo)}</title>
+    <style>
+      body{font-family:Arial,sans-serif;color:#111;padding:24px}
+      h1{margin:0 0 6px;font-size:22px}
+      .sub{margin-bottom:18px;color:#444}
+      .resumo{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+      .box{border:1px solid #bbb;padding:8px 12px;border-radius:6px}
+      table{width:100%;border-collapse:collapse;font-size:12px}
+      th,td{border:1px solid #999;padding:6px;text-align:left}
+      th{background:#eee}
+      .rodape{margin-top:18px;font-size:11px;color:#555}
+      @page{size:A4 landscape;margin:12mm}
+    </style>
+  </head>
+  <body>
+    <h1>SISFAR V2 — ${esc(titulo)}</h1>
+    <div class="sub">${esc(periodo)}</div>
+    <div class="resumo">
+      <div class="box"><b>Registros:</b> ${esc($("relatorioTotalRegistros")?.textContent || "0")}</div>
+      <div class="box"><b>Quantidade:</b> ${esc($("relatorioQuantidadeTotal")?.textContent || "0")}</div>
+      <div class="box"><b>Entradas:</b> ${esc($("relatorioTotalEntradas")?.textContent || "0")}</div>
+      <div class="box"><b>Saídas:</b> ${esc($("relatorioTotalSaidas")?.textContent || "0")}</div>
+    </div>
+    ${tabela.outerHTML}
+    <div class="rodape">Gerado pelo SISFAR V2 em ${new Date().toLocaleString("pt-BR")}.</div>
+  </body>
+  </html>`);
+  janela.document.close();
+  janela.focus();
+  setTimeout(() => janela.print(), 300);
+}
+
+$("btnGerarRelatorio")?.addEventListener("click", gerarRelatorio);
+$("btnLimparRelatorio")?.addEventListener("click", limparFiltrosRelatorio);
+$("btnImprimirRelatorio")?.addEventListener("click", imprimirRelatorio);
+$("relatorioTipo")?.addEventListener("change", gerarRelatorio);
+$("relatorioProduto")?.addEventListener("change", gerarRelatorio);
+$("relatorioDataInicial")?.addEventListener("change", gerarRelatorio);
+$("relatorioDataFinal")?.addEventListener("change", gerarRelatorio);
+$("relatorioValidadeDias")?.addEventListener("change", gerarRelatorio);
+$("relatorioBusca")?.addEventListener("input", gerarRelatorio);
 
 
 // =========================================================
